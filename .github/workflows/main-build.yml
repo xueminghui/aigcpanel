@@ -29,7 +29,6 @@ jobs:
           node-version: 20
 
       - name: Build Prepare
-        if: runner.os == 'macOS'
         run: |
             brew install python-setuptools
 
