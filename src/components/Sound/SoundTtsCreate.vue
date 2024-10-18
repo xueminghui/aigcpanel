@@ -4,9 +4,9 @@ import ServerSelector from "../Server/ServerSelector.vue";
 import {onMounted, ref, watch} from "vue";
 import {useServerStore} from "../../store/modules/server";
 import {Dialog} from "../../lib/dialog";
-import {mapError} from "../../lib/aigcpanel";
 import {SoundTtsRecord, SoundTtsService} from "../../service/SoundTtsService";
 import {StorageUtil} from "../../lib/storage";
+import {mapError} from "../../lib/error";
 
 const serverStore = useServerStore()
 

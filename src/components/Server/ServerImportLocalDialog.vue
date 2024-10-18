@@ -2,7 +2,8 @@
 import {computed, ref} from "vue";
 import {Dialog} from "../../lib/dialog";
 import {t} from "../../lang";
-import {functionToLabels, mapError} from "../../lib/aigcpanel";
+import {functionToLabels} from "../../lib/aigcpanel";
+import {mapError} from "../../lib/error";
 
 const visible = ref(false)
 const loading = ref(false)

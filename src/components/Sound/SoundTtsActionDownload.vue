@@ -2,7 +2,7 @@
 import {Dialog} from "../../lib/dialog";
 import {t} from "../../lang";
 import {SoundTtsRecord} from "../../service/SoundTtsService";
-import {mapError} from "../../lib/aigcpanel";
+import {mapError} from "../../lib/error";
 
 const props = defineProps<{
     record: SoundTtsRecord,
