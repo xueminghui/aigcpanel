@@ -73,7 +73,7 @@ const unzip = async (zipPath: string, dest: string, option: { process: Function 
                 if (option.process) {
                     option.process('start', entry)
                 }
-                // console.log('unzip entry', entry.fileName)
+                console.log('unzip entry', dest, entry.fileName)
                 const destPath = dest + '/' + entry.fileName
                 if (/\/$/.test(entry.fileName)) {
                     // console.log('unzip mkdir', destPath)
