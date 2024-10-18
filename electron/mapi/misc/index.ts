@@ -80,6 +80,10 @@ const unzip = async (zipPath: string, dest: string, option: { process: Function 
                     fs.mkdirSync(destPath, {recursive: true})
                     zipfile.readEntry()
                 } else {
+                    const dirname = destPath.replace(/\/[^/]+$/, '')
+                    if (!fs.existsSync(dirname)) {
+                        fs.mkdirSync(dirname, {recursive: true})
+                    }
                     zipfile.openReadStream(entry, function (err: any, readStream: any) {
                         if (err) {
                             reject(err)
