@@ -26,7 +26,6 @@ const logFile = computed(() => {
                 <icon-file/>
             </template>
         </a-button>
-        {{logFile}}
     </a-tooltip>
     <LogViewerDialog ref="viewerDialog" :log-file="logFile"/>
 </template>
