@@ -28,6 +28,11 @@ jobs:
         with:
           node-version: 20
 
+      - name: Build Prepare
+        run: |
+            pip install --upgrade pip
+            pip install setuptools
+
       - name: Install Dependencies
         run: npm install
 
