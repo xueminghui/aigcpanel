@@ -134,6 +134,8 @@ const emit = defineEmits({
     <a-modal v-model:visible="visible"
              width="40rem"
              :footer="false"
+             :esc-to-close="false"
+             :mask-closable="false"
              title-align="start">
         <template #title>
             {{ $t('导入本地模型') }}
