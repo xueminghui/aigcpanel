@@ -30,8 +30,7 @@ jobs:
 
       - name: Build Prepare
         run: |
-            pip install --upgrade pip
-            pip install setuptools
+            brew install python-setuptools
 
       - name: Install Dependencies
         run: npm install
