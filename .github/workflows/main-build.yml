@@ -31,6 +31,10 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
+      - name: Build Prepare
+        run: |
+            pip install setuptools
+
       - name: Build Release Files
         run: npm run build
         env:
