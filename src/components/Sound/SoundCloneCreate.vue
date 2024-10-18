@@ -1,0 +1,180 @@
+<script setup lang="ts">
+
+import ServerSelector from "../Server/ServerSelector.vue";
+import {onMounted, ref, watch} from "vue";
+import {useServerStore} from "../../store/modules/server";
+import {Dialog} from "../../lib/dialog";
+import {SoundCloneRecord, SoundCloneService} from "../../service/SoundCloneService";
+import {StorageUtil} from "../../lib/storage";
+import {useSoundClonePromptStore} from "../../store/modules/soundClonePrompt";
+
+const soundClonePromptStore = useSoundClonePromptStore()
+const serverStore = useServerStore()
+
+const formData = ref({
+    serverKey: '',
+    promptName: '',
+    speed: 1.0,
+    text: '',
+    seed: '0',
+});
+
+onMounted(() => {
+    const old = StorageUtil.getObject('SoundCloneCreate.formData')
+    formData.value.serverKey = old.serverKey || ''
+    formData.value.promptName = old.speaker || ''
+    formData.value.speed = old.speed || 1.0
+    formData.value.text = old.text || ''
+    formData.value.seed = old.seed || '0'
+})
+
+watch(() => formData.value, async (value) => {
+    StorageUtil.set('SoundCloneCreate.formData', value)
+}, {
+    deep: true
+})
+
+
+const doRandomSeed = () => {
+    formData.value.seed = Math.floor(Math.random() * 1000000) + ''
+}
+
+const doSubmit = async () => {
+    if (!formData.value.serverKey) {
+        Dialog.tipError('请选择模型')
+        return
+    }
+    if (!formData.value.promptName) {
+        Dialog.tipError('请选择声音参考')
+        return
+    }
+    const prompt = await soundClonePromptStore.getByName(formData.value.promptName)
+    if (!prompt) {
+        Dialog.tipError('声音参考不存在')
+        return
+    }
+    if (formData.value.seed === '') {
+        Dialog.tipError('请输入随机种子')
+        return
+    }
+    if (!formData.value.text) {
+        Dialog.tipError('请输入合成内容')
+        return
+    }
+    const server = await serverStore.getByKey(formData.value.serverKey)
+    if (!server) {
+        Dialog.tipError('模型不存在')
+        return
+    }
+    const record: SoundCloneRecord = {
+        serverName: server.name,
+        serverTitle: server.title,
+        serverVersion: server.version,
+        promptName: prompt.name,
+        promptWav: prompt.promptWav,
+        promptText: prompt.promptText,
+        text: formData.value.text,
+        speed: formData.value.speed,
+        seed: parseInt(formData.value.seed),
+    }
+    const id = await SoundCloneService.submit(record)
+    formData.value.text = ''
+    Dialog.tipSuccess('任务已经提交成功，等待克隆完成')
+    emit('submitted')
+}
+
+const emit = defineEmits({
+    submitted: () => true
+})
+
+</script>
+
+<template>
+    <div class="rounded-xl shadow border p-4">
+        <div class="flex items-center">
+            <div class="flex-grow flex items-center h-12">
+                <div class="mr-1">
+                    <a-tooltip content="模型">
+                        <i class="iconfont icon-server"></i>
+                    </a-tooltip>
+                </div>
+                <div class="mr-3 w-72 flex-shrink-0">
+                    <ServerSelector v-model="formData.serverKey" functionName="soundClone"/>
+                </div>
+                <div class="mr-1">
+                    <a-tooltip content="声音参考">
+                        <i class="iconfont icon-speaker"></i>
+                    </a-tooltip>
+                </div>
+                <div class="mr-3 w-32">
+                    <a-select placeholder="选择声音参考" size="small"
+                              v-model="formData.promptName">
+                        <a-option v-for="s in soundClonePromptStore.records">
+                            {{ s.name }}
+                        </a-option>
+                    </a-select>
+                </div>
+                <div>
+                    <a-tooltip content="音速">
+                        <i class="iconfont icon-speed"></i>
+                    </a-tooltip>
+                </div>
+                <div class="mr-4 w-48 flex-shrink-0">
+                    <a-slider v-model="formData.speed" :marks="{'0.5':'慢','1':'正常','2':'快'}" show-tooltip sho
+                              w-input :min="0.5" :max="2" :step="0.1"/>
+                </div>
+                <div class="mr-2">
+                    <a-popover>
+                        <i class="iconfont icon-seed"></i>
+                        <template #content>
+                            <div class="text-sm">
+                                <div class="font-bold mb-2">随机推理种子</div>
+                                <div>相同的种子可以确保每次生成结果数据一致</div>
+                            </div>
+                        </template>
+                    </a-popover>
+                </div>
+                <div class="mr-1 w-20 flex-shrink-0">
+                    <a-input v-model="formData.seed" class="pb-seed-input" size="small"/>
+                </div>
+                <div class="mr-4">
+                    <a-tooltip content="随机生成">
+                        <a class="inline-block" href="javascript:;"
+                           @click="doRandomSeed">
+                            <icon-refresh/>
+                        </a>
+                    </a-tooltip>
+                </div>
+            </div>
+            <div class="flex items-center">
+            </div>
+        </div>
+        <div class="pt-4">
+            <a-textarea v-model="formData.text" placeholder="输入语音内容开始克隆"></a-textarea>
+        </div>
+        <div class="pt-2">
+            <a-button type="primary" @click="doSubmit">
+                开始克隆
+            </a-button>
+        </div>
+    </div>
+</template>
+
+<style lang="less" scoped>
+:deep(.arco-slider) {
+    margin-bottom: 0 !important;
+
+    .arco-slider-mark {
+        font-size: 10px !important;
+    }
+}
+
+:deep(.pb-seed-input) {
+    padding-left: 0;
+    padding-right: 0;
+
+    .arco-input {
+        text-align: center;
+    }
+}
+</style>
