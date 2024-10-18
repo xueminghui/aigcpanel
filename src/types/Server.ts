@@ -18,15 +18,15 @@ export type ServerRecord = {
     version: string,
     type?: EnumServerType,
     functions: string[],
-    status?: any,
-    runtime?: any,
     localPath?: string,
     localEntry?: string,
     setting: {
         port: string,
         gpuMode: '' | 'cpu',
         entryCommand: string,
-    }
+    },
+    status?: any,
+    runtime?: any,
 }
 
 export type ServerRuntime = {
