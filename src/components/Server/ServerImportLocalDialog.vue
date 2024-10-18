@@ -2,7 +2,7 @@
 import {computed, ref} from "vue";
 import {Dialog} from "../../lib/dialog";
 import {t} from "../../lang";
-import {functionToLabels} from "../../lib/aigcpanel";
+import {functionToLabels, mapError} from "../../lib/aigcpanel";
 
 const visible = ref(false)
 const loading = ref(false)
@@ -61,29 +61,36 @@ const doSubmit = async () => {
     }
     isImporting.value = true
     logStatus.value = t('正在解压文件')
-    await window.$mapi.misc.unzip(modelInfo.value.path, target, {
-        process: (type: string, file: any) => {
-            switch (type) {
-                case 'start':
-                    // logAppend(t('正在解压 {name}', {name: file.fileName}))
-                    break
-                case 'end':
-                    break
-                default:
-                    console.error('unzip', type, file)
-                    break
+    try {
+        await window.$mapi.misc.unzip(modelInfo.value.path, target, {
+            process: (type: string, file: any) => {
+                switch (type) {
+                    case 'start':
+                        // logAppend(t('正在解压 {name}', {name: file.fileName}))
+                        break
+                    case 'end':
+                        break
+                    default:
+                        console.error('unzip', type, file)
+                        break
+                }
+            },
+        })
+        // console.log('entry', modelInfo.value.entry)
+        if (modelInfo.value.entry) {
+            const executable = target + '/' + modelInfo.value.entry
+            const executableAbsolute = window.$mapi.file.absolutePath(executable)
+            // console.log('executable', executable)
+            if (await window.$mapi.file.exists(executableAbsolute)) {
+                await window.$mapi.app.fixExecutable(executable)
+                // console.log('fixExecutable', executable)
             }
-        },
-    })
-    // console.log('entry', modelInfo.value.entry)
-    if (modelInfo.value.entry) {
-        const executable = target + '/' + modelInfo.value.entry
-        const executableAbsolute = window.$mapi.file.absolutePath(executable)
-        // console.log('executable', executable)
-        if (await window.$mapi.file.exists(executableAbsolute)) {
-            await window.$mapi.app.fixExecutable(executable)
-            // console.log('fixExecutable', executable)
         }
+    } catch (e) {
+        console.error('ServerImportLocalDialog.doSubmit.error', e)
+        Dialog.tipError(mapError(e))
+        isImporting.value = false
+        return
     }
     logStatus.value = t('文件解压完成')
     Dialog.tipSuccess('模型文件导入成功')

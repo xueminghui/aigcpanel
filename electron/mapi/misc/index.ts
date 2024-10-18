@@ -54,7 +54,7 @@ const unzip = async (zipPath: string, dest: string, option: { process: Function 
         fs.mkdirSync(dest, {recursive: true})
     }
     return new Promise((resolve, reject) => {
-        console.log('unzip', zipPath, dest)
+        // console.log('unzip', zipPath, dest)
         yauzl.open(zipPath, {lazyEntries: true}, (err: any, zipfile: any) => {
             if (err) {
                 // console.log('unzip err', err)
@@ -73,7 +73,7 @@ const unzip = async (zipPath: string, dest: string, option: { process: Function 
                 if (option.process) {
                     option.process('start', entry)
                 }
-                console.log('unzip entry', dest, entry.fileName)
+                // console.log('unzip entry', dest, entry.fileName)
                 const destPath = dest + '/' + entry.fileName
                 if (/\/$/.test(entry.fileName)) {
                     // console.log('unzip mkdir', destPath)
