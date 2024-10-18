@@ -138,9 +138,9 @@ function createWindow() {
                 try {
                     AppRuntime.splashWindow?.close()
                     AppRuntime.splashWindow = null
-                    AppRuntime.mainWindow.webContents.openDevTools({
-                        mode: 'detach',
-                    })
+                    // AppRuntime.mainWindow.webContents.openDevTools({
+                    //     mode: 'detach',
+                    // })
                 } catch (e) {
                 }
             }, 1000);
