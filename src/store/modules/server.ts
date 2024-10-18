@@ -188,7 +188,7 @@ export const serverStore = defineStore("server", {
                         serverRuntime.pingCheckTimer = setTimeout(pingCheck, 5000)
                     })
             }
-            serverRuntime.pingCheckTimer = setTimeout(pingCheck, 5000)
+            serverRuntime.pingCheckTimer = setTimeout(pingCheck, 10 * 1000)
         },
         async stop(server: ServerRecord) {
             const record = this.records.find((record) => record.name === server.name)
