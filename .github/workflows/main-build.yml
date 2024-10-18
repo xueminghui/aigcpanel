@@ -32,8 +32,9 @@ jobs:
         run: npm install
 
       - name: Build Prepare
+        if: runner.os == 'macOS'
         run: |
-            pip install setuptools
+            brew install python-setuptools
 
       - name: Build Release Files
         run: npm run build
