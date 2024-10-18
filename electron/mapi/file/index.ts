@@ -213,6 +213,7 @@ const deletes = async (path: string, option?: Record<string, any>) => {
 const rename = async (pathOld: string, pathNew: string, option?: Record<string, any>) => {
     option = Object.assign({
         isFullPath: false,
+        overwrite: false,
     }, option)
     let fullPathOld = pathOld
     let fullPathNew = pathNew
@@ -221,10 +222,13 @@ const rename = async (pathOld: string, pathNew: string, option?: Record<string, 
         fullPathNew = await fullPath(pathNew)
     }
     if (!fs.existsSync(fullPathOld)) {
-        return
+        throw new Error(`FileNotFound:${fullPathOld}`)
     }
     if (fs.existsSync(fullPathNew)) {
-        throw new Error(`File already exists: ${fullPathNew}`)
+        if (!option.overwrite) {
+            throw new Error(`FileAlreadyExists:${fullPathNew}`)
+        }
+        fs.unlinkSync(fullPathNew)
     }
     const dir = nodePath.dirname(fullPathNew)
     if (!fs.existsSync(dir)) {

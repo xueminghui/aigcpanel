@@ -21,6 +21,7 @@ const versions = [
                     text TEXT,
                     speed TEXT,
                     seed TEXT,
+                    param TEXT,
 
                     status TEXT,
                     statusMsg TEXT,
@@ -42,6 +43,7 @@ const versions = [
                     text TEXT,
                     speed TEXT,
                     seed TEXT,
+                    param TEXT,
 
                     status TEXT,
                     statusMsg TEXT,

@@ -15,6 +15,7 @@ export type SoundCloneRecord = {
     text: string;
     speed: number;
     seed: number;
+    param?: any;
 
     status?: 'queue' | 'running' | 'success' | 'fail';
     statusMsg?: string;
@@ -42,10 +43,14 @@ export const SoundCloneService = {
         }
         return {
             ...record,
+            param: JSON.parse(record.param ? record.param : '{}'),
             jobResult: JSON.parse(record.jobResult ? record.jobResult : '{}')
         } as SoundCloneRecord
     },
     encodeRecord(record: SoundCloneRecord): SoundCloneRecord {
+        if ('param' in record) {
+            record.param = JSON.stringify(record.param || {})
+        }
         if ('jobResult' in record) {
             record.jobResult = JSON.stringify(record.jobResult || {})
         }
@@ -81,9 +86,12 @@ export const SoundCloneService = {
         record.status = 'queue'
         record.startTime = TimeUtil.timestampMS()
         const fields = [
-            'serverName', 'serverTitle', 'serverVersion', 'promptName', 'promptWav', 'promptText', 'text', 'speed', 'seed',
+            'serverName', 'serverTitle', 'serverVersion',
+            'promptName', 'promptWav', 'promptText',
+            'text', 'speed', 'seed', 'param',
             'status', 'statusMsg', 'startTime', 'endTime',
         ]
+        record = this.encodeRecord(record)
         const values = fields.map(f => record[f])
         const valuesPlaceholder = fields.map(f => '?')
         const id = await window.$mapi.db.insert(`INSERT INTO ${this.tableName()} (${fields.join(',')})
@@ -104,7 +112,9 @@ export const SoundCloneService = {
         const resultWavNew = await SoundCloneService.resultWavPath(record)
         const resultWavNewAbs = window.$mapi.file.absolutePath(resultWavNew)
         // console.log('CloneService.saveResultWav', {resultWav, resultWavAbs, resultWavNew, resultWavNewAbs})
-        await window.$mapi.file.rename(resultWavAbs, resultWavNewAbs)
+        await window.$mapi.file.rename(resultWavAbs, resultWavNewAbs, {
+            overwrite: true
+        })
         return resultWavNew
     },
     async delete(record: SoundCloneRecord) {

@@ -103,7 +103,7 @@ const emit = defineEmits({
                         <i class="iconfont icon-server"></i>
                     </a-tooltip>
                 </div>
-                <div class="mr-3 w-72 flex-shrink-0">
+                <div class="mr-3 w-64 flex-shrink-0">
                     <ServerSelector v-model="formData.serverKey" functionName="soundTts"/>
                 </div>
                 <div class="mr-1" v-if="speakers.length>0">

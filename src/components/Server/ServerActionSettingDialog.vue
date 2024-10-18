@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import {EnumServerStatus, ServerRecord} from "../../types/Server";
-import {computed, ref} from "vue";
+import {computed, ref, toRaw} from "vue";
+import {useServerStore} from "../../store/modules/server";
+import {Dialog} from "../../lib/dialog";
+import {clone, cloneDeep} from "lodash-es";
 
+const serverStore = useServerStore()
 const props = defineProps<{
     record: ServerRecord,
 }>()
@@ -10,6 +14,7 @@ const visible = ref(false)
 const setting = ref({
     port: '',
     gpuMode: '',
+    entryCommand: '',
 })
 const readonly = computed(() => {
     return ![
@@ -20,10 +25,15 @@ const readonly = computed(() => {
 
 const show = () => {
     visible.value = true
+    setting.value.port = props.record.setting?.port || ''
+    setting.value.gpuMode = props.record.setting?.gpuMode || ''
+    setting.value.entryCommand = props.record.setting?.entryCommand || ''
 }
 
-const doSubmit = () => {
-    console.log(setting.value)
+const doSubmit = async () => {
+    await serverStore.updateSetting(props.record.key, cloneDeep(toRaw(setting.value)))
+    Dialog.tipSuccess('设置成功')
+    visible.value = false
 }
 
 defineExpose({
@@ -56,6 +66,11 @@ defineExpose({
                         <a-radio value="">{{ $t('GPU优先') }}</a-radio>
                         <a-radio value="cpu">{{ $t('使用CPU') }}</a-radio>
                     </a-radio-group>
+                </a-form-item>
+                <a-form-item field="entryCommand" label="启动命令">
+                    <a-input v-model="setting.entryCommand"
+                             :readonly="readonly"
+                             placeholder="留空使用默认启动命令"/>
                 </a-form-item>
             </a-form>
         </div>

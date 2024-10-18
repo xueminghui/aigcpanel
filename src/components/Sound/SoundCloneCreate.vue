@@ -17,6 +17,8 @@ const formData = ref({
     speed: 1.0,
     text: '',
     seed: '0',
+    // 是否跨语种
+    crossLingual: false,
 });
 
 onMounted(() => {
@@ -76,6 +78,9 @@ const doSubmit = async () => {
         text: formData.value.text,
         speed: formData.value.speed,
         seed: parseInt(formData.value.seed),
+        param: {
+            CrossLingual: formData.value.crossLingual
+        }
     }
     const id = await SoundCloneService.submit(record)
     formData.value.text = ''
@@ -98,7 +103,7 @@ const emit = defineEmits({
                         <i class="iconfont icon-server"></i>
                     </a-tooltip>
                 </div>
-                <div class="mr-3 w-72 flex-shrink-0">
+                <div class="mr-3 w-64 flex-shrink-0">
                     <ServerSelector v-model="formData.serverKey" functionName="soundClone"/>
                 </div>
                 <div class="mr-1">
@@ -144,6 +149,11 @@ const emit = defineEmits({
                             <icon-refresh/>
                         </a>
                     </a-tooltip>
+                </div>
+                <div>
+                    <a-checkbox v-model="formData.crossLingual">
+                        跨语种
+                    </a-checkbox>
                 </div>
             </div>
             <div class="flex items-center">

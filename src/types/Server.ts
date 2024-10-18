@@ -22,6 +22,11 @@ export type ServerRecord = {
     runtime?: any,
     localPath?: string,
     localEntry?: string,
+    setting: {
+        port: string,
+        gpuMode: '' | 'cpu',
+        entryCommand: string,
+    }
 }
 
 export type ServerRuntime = {

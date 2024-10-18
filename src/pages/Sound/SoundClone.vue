@@ -82,6 +82,11 @@ const doRefresh = async () => {
                                     <i class="iconfont icon-speed mr-1"></i>
                                     <span class="">x{{ r.speed }}</span>
                                 </div>
+                                <div v-if="r.param.CrossLingual"
+                                     class="inline-block mr-4 bg-blue-100 rounded-lg px-2 leading-8 h-8">
+                                    <i class="iconfont icon-global mr-1"></i>
+                                    <span class="">跨语种</span>
+                                </div>
                             </div>
                             <div class="ml-1">
                                 <SoundDuration :start="r.startTime" :end="r.endTime"/>

@@ -13,6 +13,7 @@ export type SoundTtsRecord = {
     text: string;
     speed: number;
     seed: number;
+    param?: any;
 
     status?: 'queue' | 'running' | 'success' | 'fail';
     statusMsg?: string;
@@ -40,10 +41,14 @@ export const SoundTtsService = {
         }
         return {
             ...record,
+            param: JSON.parse(record.param ? record.param : '{}'),
             jobResult: JSON.parse(record.jobResult ? record.jobResult : '{}')
         } as SoundTtsRecord
     },
     encodeRecord(record: SoundTtsRecord): SoundTtsRecord {
+        if ('param' in record) {
+            record.param = JSON.stringify(record.param || {})
+        }
         if ('jobResult' in record) {
             record.jobResult = JSON.stringify(record.jobResult || {})
         }
@@ -79,9 +84,12 @@ export const SoundTtsService = {
         record.status = 'queue'
         record.startTime = TimeUtil.timestampMS()
         const fields = [
-            'serverName', 'serverTitle', 'serverVersion', 'speaker', 'text', 'speed', 'seed',
+            'serverName', 'serverTitle', 'serverVersion',
+            'speaker',
+            'text', 'speed', 'seed', 'param',
             'status', 'statusMsg', 'startTime', 'endTime',
         ]
+        record = this.encodeRecord(record)
         const values = fields.map(f => record[f])
         const valuesPlaceholder = fields.map(f => '?')
         const id = await window.$mapi.db.insert(`INSERT INTO ${this.tableName()} (${fields.join(',')})
@@ -102,7 +110,9 @@ export const SoundTtsService = {
         const resultWavNew = await SoundTtsService.resultWavPath(record)
         const resultWavNewAbs = window.$mapi.file.absolutePath(resultWavNew)
         // console.log('TtsService.saveResultWav', {resultWav, resultWavAbs, resultWavNew, resultWavNewAbs})
-        await window.$mapi.file.rename(resultWavAbs, resultWavNewAbs)
+        await window.$mapi.file.rename(resultWavAbs, resultWavNewAbs, {
+            overwrite: true
+        })
         return resultWavNew
     },
     async delete(record: SoundTtsRecord) {
