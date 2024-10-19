@@ -10,7 +10,7 @@ const props = defineProps<{
 
 const doDownload = async () => {
     const record = props.record
-    const title = `声音合成_${record.id}_${record.text.substring(0, 10)}.wav`
+    const title = `${t('声音合成')}_${record.id}_${record.text.substring(0, 10)}.wav`
     let filePath = await window.$mapi.file.openSave({
         defaultPath: title
     })

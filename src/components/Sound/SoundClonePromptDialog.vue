@@ -4,6 +4,7 @@ import {SoundClonePromptRecord, useSoundClonePromptStore} from "../../store/modu
 import SoundClonePromptEditDialog from "./SoundClonePromptEditDialog.vue";
 import {Dialog} from "../../lib/dialog";
 import AudioPlayer from "../common/AudioPlayer.vue";
+import {t} from "../../lang";
 
 const visible = ref(false)
 const soundClonePromptStore = useSoundClonePromptStore()
@@ -15,28 +16,28 @@ const show = () => {
 
 const columns = [
     {
-        title: '名称',
+        title: t('名称'),
         dataIndex: 'name',
         width: 100,
     },
     {
-        title: '参考文字',
+        title: t('参考文字'),
         dataIndex: 'promptText',
         width: 200,
     },
     {
-        title: '参考声音',
+        title: t('参考声音'),
         slotName: 'promptPlayer',
     },
     {
-        title: '操作',
+        title: t('操作'),
         slotName: 'operate',
         width: 80,
     }
 ]
 
 const doDelete = async (record: SoundClonePromptRecord) => {
-    await Dialog.confirm('确认删除？')
+    await Dialog.confirm(t('确认删除？'))
     await soundClonePromptStore.delete(record.name)
 }
 
@@ -51,7 +52,7 @@ defineExpose({
              :footer="false"
              title-align="start">
         <template #title>
-            声音角色
+            {{ $t('声音角色') }}
         </template>
         <div>
             <div class="mb-3">
@@ -59,7 +60,7 @@ defineExpose({
                     <template #icon>
                         <icon-plus/>
                     </template>
-                    添加
+                    {{ $t('添加') }}
                 </a-button>
             </div>
             <a-table :scroll="{maxHeight:'40vh'}"

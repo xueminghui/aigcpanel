@@ -7,6 +7,7 @@ import {Dialog} from "../../lib/dialog";
 import {SoundCloneRecord, SoundCloneService} from "../../service/SoundCloneService";
 import {StorageUtil} from "../../lib/storage";
 import {useSoundClonePromptStore} from "../../store/modules/soundClonePrompt";
+import {t} from "../../lang";
 
 const soundClonePromptStore = useSoundClonePromptStore()
 const serverStore = useServerStore()
@@ -43,29 +44,29 @@ const doRandomSeed = () => {
 
 const doSubmit = async () => {
     if (!formData.value.serverKey) {
-        Dialog.tipError('请选择模型')
+        Dialog.tipError(t('请选择模型'))
         return
     }
     if (!formData.value.promptName) {
-        Dialog.tipError('请选择声音参考')
+        Dialog.tipError(t('请选择声音参考'))
         return
     }
     const prompt = await soundClonePromptStore.getByName(formData.value.promptName)
     if (!prompt) {
-        Dialog.tipError('声音参考不存在')
+        Dialog.tipError(t('声音参考不存在'))
         return
     }
     if (formData.value.seed === '') {
-        Dialog.tipError('请输入随机种子')
+        Dialog.tipError(t('请输入随机种子'))
         return
     }
     if (!formData.value.text) {
-        Dialog.tipError('请输入合成内容')
+        Dialog.tipError(t('请输入合成内容'))
         return
     }
     const server = await serverStore.getByKey(formData.value.serverKey)
     if (!server) {
-        Dialog.tipError('模型不存在')
+        Dialog.tipError(t('模型不存在'))
         return
     }
     const record: SoundCloneRecord = {
@@ -84,7 +85,7 @@ const doSubmit = async () => {
     }
     const id = await SoundCloneService.submit(record)
     formData.value.text = ''
-    Dialog.tipSuccess('任务已经提交成功，等待克隆完成')
+    Dialog.tipSuccess(t('任务已经提交成功，等待克隆完成'))
     emit('submitted')
 }
 
@@ -99,7 +100,7 @@ const emit = defineEmits({
         <div class="flex items-center">
             <div class="flex-grow flex items-center h-12">
                 <div class="mr-1">
-                    <a-tooltip content="模型">
+                    <a-tooltip :content="$t('模型')">
                         <i class="iconfont icon-server"></i>
                     </a-tooltip>
                 </div>
@@ -107,12 +108,12 @@ const emit = defineEmits({
                     <ServerSelector v-model="formData.serverKey" functionName="soundClone"/>
                 </div>
                 <div class="mr-1">
-                    <a-tooltip content="声音参考">
+                    <a-tooltip :content="$t('声音参考')">
                         <i class="iconfont icon-speaker"></i>
                     </a-tooltip>
                 </div>
                 <div class="mr-3 w-32">
-                    <a-select placeholder="选择声音参考" size="small"
+                    <a-select :placeholder="$t('选择声音参考')" size="small"
                               v-model="formData.promptName">
                         <a-option v-for="s in soundClonePromptStore.records">
                             {{ s.name }}
@@ -120,21 +121,21 @@ const emit = defineEmits({
                     </a-select>
                 </div>
                 <div>
-                    <a-tooltip content="音速">
+                    <a-tooltip :content="$t('音速')">
                         <i class="iconfont icon-speed"></i>
                     </a-tooltip>
                 </div>
                 <div class="mr-4 w-48 flex-shrink-0">
-                    <a-slider v-model="formData.speed" :marks="{'0.5':'慢','1':'正常','2':'快'}" show-tooltip sho
-                              w-input :min="0.5" :max="2" :step="0.1"/>
+                    <a-slider v-model="formData.speed" :marks="{'0.5':t('慢'),'1':t('正常'),'2':t('快')}"
+                              show-tooltip :min="0.5" :max="2" :step="0.1"/>
                 </div>
                 <div class="mr-2">
                     <a-popover>
                         <i class="iconfont icon-seed"></i>
                         <template #content>
                             <div class="text-sm">
-                                <div class="font-bold mb-2">随机推理种子</div>
-                                <div>相同的种子可以确保每次生成结果数据一致</div>
+                                <div class="font-bold mb-2">{{ $t('随机推理种子') }}</div>
+                                <div>{{ $t('相同的种子可以确保每次生成结果数据一致') }}</div>
                             </div>
                         </template>
                     </a-popover>
@@ -143,7 +144,7 @@ const emit = defineEmits({
                     <a-input v-model="formData.seed" class="pb-seed-input" size="small"/>
                 </div>
                 <div class="mr-4">
-                    <a-tooltip content="随机生成">
+                    <a-tooltip :content="$t('随机生成')">
                         <a class="inline-block" href="javascript:;"
                            @click="doRandomSeed">
                             <icon-refresh/>
@@ -152,7 +153,7 @@ const emit = defineEmits({
                 </div>
                 <div>
                     <a-checkbox v-model="formData.crossLingual">
-                        跨语种
+                        {{ $t('跨语种') }}
                     </a-checkbox>
                 </div>
             </div>
@@ -160,11 +161,11 @@ const emit = defineEmits({
             </div>
         </div>
         <div class="pt-4">
-            <a-textarea v-model="formData.text" placeholder="输入语音内容开始克隆"></a-textarea>
+            <a-textarea v-model="formData.text" :placeholder="$t('输入语音内容开始克隆')"></a-textarea>
         </div>
         <div class="pt-2">
             <a-button type="primary" @click="doSubmit">
-                开始克隆
+                {{ $t('开始克隆') }}
             </a-button>
         </div>
     </div>

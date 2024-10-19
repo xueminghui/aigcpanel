@@ -11,7 +11,7 @@ const props = defineProps<{
 </script>
 
 <template>
-    <a-select placeholder="选择模型" size="small">
+    <a-select :placeholder="$t('选择模型')" size="small">
         <a-option v-for="server in serverStore.records.filter(s => s.functions.includes(props.functionName))"
                   :key="server.key"
                   :value="server.key">

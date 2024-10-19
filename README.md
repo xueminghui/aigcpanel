@@ -1,89 +1,81 @@
 # AigcPanel
 
-![](./screenshots/en/home.png)
+![](./screenshots/cn/home.png)
 
-## Guide
+## 软件介绍
 
-【[中文文档](./README-CN.md)】 【[English](./README.md)】
+`AigcPanel` 为简化模型本地调用面板工具，支持语音合成、语音克隆，一键导入和使用AI模型。
 
-`AigcPanel` is an all-in-one mobile phone connection assistant that can easily connect `Android` and computers. After connecting the phone, you can screen mirroring, GIF/MP4 screen recording, screenshots, file management, and phone operation.
+## 功能特性
 
-## Features
+- 支持语音合成、语音克隆
+- 支持 cosyvoice 语音模型
+- 支持多模型导入、模型设置、模型启动停止、模型日志查看
+- 支持国际化，支持简体中文、英语
 
-- multiple phone connect supported
-- screen mirroring, based on scrcpy, support phone operation
-- screenshot, image beautifier will be opened automatically after screenshot
-- GIF/MP4 screen recording
-- application management
-- file management, support upload/download/delete
-- shell command, support adb, screen command and phone shell command
-- 1i8n support, English/Simplified Chinese supported 
+## 功能预览
 
-## Previews
+### 语音克隆
 
-### Screen mirroring
+![](./screenshots/cn/voice-clone.png)
 
-![](./screenshots/en/mirror.png)
+### 语音合成
 
-### Screen recording
+![](./screenshots/cn/voice-tts.png)
 
-![](./screenshots/en/screenrecord.png)
+### 模型导入
 
-### Screenshot
+![](./screenshots/cn/server-import.png)
 
-![](./screenshots/en/screenshot.png)
+### 模型设置
 
-### Command line
+![](./screenshots/cn/server-setting.png)
 
-![](./screenshots/en/screenshot.png)
+### 模型日志
 
-### App management
+![](./screenshots/cn/server-log.png)
 
-![](./screenshots/en/appmanage.png)
+### 关于
 
-## Get the app
+![](./screenshots/cn/about.png)
+
+## 安装使用
 
 ### Windows
 
-- download Windows installer from [https://aigcpanel.com](https://aigcpanel.com)
+- 访问 [https://aigcpanel.com](https://aigcpanel.com) 下载 Windows 安装包，一键安装即可
 
 ### MacOS
 
-- download MacOS installer from [https://aigcpanel.com](https://aigcpanel.com)
-- install `scrcpy` manually, refer to [scrcpy tutorial](https://github.com/Genymobile/scrcpy)
-    - [https://github.com/Genymobile/scrcpy/blob/master/doc/macos.md](https://github.com/Genymobile/scrcpy/blob/master/doc/macos.md)
+- 访问 [https://aigcpanel.com](https://aigcpanel.com) 下载 MacOS 安装包，一键安装完成；
 
 ### Linux
 
-- download Linux installer from [https://aigcpanel.com](https://aigcpanel.com)
-- install `scrcpy` manually, refer to [scrcpy tutorial](https://github.com/Genymobile/scrcpy)
-    - [https://github.com/Genymobile/scrcpy/blob/master/doc/linux.md](https://github.com/Genymobile/scrcpy/blob/master/doc/linux.md)
+- 访问 [https://aigcpanel.com](https://aigcpanel.com) 下载 Linux 安装包，一键安装完成；
 
-## We uses
+
+## 技术栈
 
 - `electron`
 - `vue3`
 - `typescript`
 
-## Development
+## 本地运行开发
 
-> only node 20 tested
+> 仅在 node 20 测试过
 
 ```shell
-# install dependencies
+# 安装依赖
 npm install
-# run in dev mode
+# 调试运行
 npm run dev
-# build
+# 打包
 npm run build
 ```
 
-## Thanks
+## 本程序中使用到了以下开源项目，特此感谢
 
-- [image-beautifier](https://github.com/CH563/image-beautifier)
-- [scrcpy](https://github.com/Genymobile/scrcpy)
-- [adb](https://developer.android.com/studio/command-line/adb)
-- [ffmpeg](https://ffmpeg.org/)
+- [CosyVoice](https://github.com/FunAudioLLM/CosyVoice)
 
 ## License
 

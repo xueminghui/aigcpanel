@@ -49,7 +49,7 @@ const doSubmit = async () => {
     const target = await window.$mapi.file.fullPath(`model/${modelInfo.value.name}-${modelInfo.value.version}`)
     const targetAbsolute = window.$mapi.file.absolutePath(target)
     if (await window.$mapi.file.exists(targetAbsolute)) {
-        Dialog.tipError('模型相同版本已存在')
+        Dialog.tipError(t('模型相同版本已存在'))
         return
     }
     if (window.$mapi.app.platformName() !== modelInfo.value.platformName) {
@@ -94,7 +94,7 @@ const doSubmit = async () => {
         return
     }
     logStatus.value = t('文件解压完成')
-    Dialog.tipSuccess('模型文件导入成功')
+    Dialog.tipSuccess(t('模型文件导入成功'))
     visible.value = false
     isImporting.value = false
     emit('update')
@@ -123,7 +123,7 @@ const doSelectFile = async () => {
         logStatus.value = ''
     } catch (e) {
         console.log('ServerImportLocalDialog.doSelectFile.error', e)
-        Dialog.tipError('模型文件解析失败，请选择正确的模型文件')
+        Dialog.tipError(t('模型文件解析失败，请选择正确的模型文件'))
     }
     loading.value = false
 }
@@ -179,11 +179,11 @@ const emit = defineEmits({
                             <div>{{ modelInfo.description }}</div>
                         </div>
                         <div class="flex">
-                            <div class="pr-3 text-right w-20 flex-shrink-0">适配</div>
+                            <div class="pr-3 text-right w-20 flex-shrink-0">{{ $t('适配') }}</div>
                             <div>{{ platformInfo }}</div>
                         </div>
                         <div class="flex">
-                            <div class="pr-3 text-right w-20 flex-shrink-0">功能</div>
+                            <div class="pr-3 text-right w-20 flex-shrink-0">{{ $t('功能') }}</div>
                             <div>
                                 <a-tag v-for="label in functionLabels" class="mr-1">
                                     {{ label }}
@@ -199,7 +199,7 @@ const emit = defineEmits({
                                 <template #icon>
                                     <icon-check/>
                                 </template>
-                                确认导入
+                                {{ $t('确认导入') }}
                             </a-button>
                             <a-button class="mr-2"
                                       v-if="!isImporting"
@@ -207,7 +207,7 @@ const emit = defineEmits({
                                 <template #icon>
                                     <icon-upload/>
                                 </template>
-                                重新选择
+                                {{ $t('重新选择') }}
                             </a-button>
                         </div>
                         <div class="flex-grow pl-3">
