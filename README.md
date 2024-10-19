@@ -1,10 +1,10 @@
 # AigcPanel
 
-![](./screenshots/cn/home.png)
+![](./screenshots/cn/voice-clone.png)
 
 ## 软件介绍
 
-`AigcPanel` 为简化模型本地调用面板工具，支持语音合成、语音克隆，一键导入和使用AI模型。
+`AigcPanel` 是一个模型调用管理面板，简化本地模型管理、支持语音合成、语音克隆，一键导入和使用AI模型。
 
 ## 功能特性
 
