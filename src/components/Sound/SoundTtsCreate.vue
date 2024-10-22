@@ -39,7 +39,7 @@ watch(() => formData.value.serverKey, async (value) => {
     // console.log('formData.serverKey', value)
     const server = await serverStore.getByKey(value)
     if (server) {
-        const res = await serverStore.apiConfig(server)
+        const res = await window.$mapi.server.config(await serverStore.serverInfo(server))
         if (res.code) {
             Dialog.tipError(mapError(res.msg))
             return

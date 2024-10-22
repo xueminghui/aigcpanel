@@ -17,6 +17,7 @@ import user from "./user/render";
 import misc from "./misc/render";
 
 import ffmpeg from "./ffmpeg/render";
+import server from "./server/render";
 
 export const MAPI = {
     init(env: typeof AppEnv = null) {
@@ -39,6 +40,7 @@ export const MAPI = {
                 misc,
 
                 ffmpeg,
+                server,
             })
             db.init()
             event.init()

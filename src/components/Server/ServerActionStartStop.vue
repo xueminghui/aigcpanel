@@ -7,6 +7,7 @@ const serverStore = useServerStore()
 const props = defineProps<{
     record: ServerRecord,
 }>()
+
 const doStart = async () => {
     const record = props.record
     await serverStore.start(record)

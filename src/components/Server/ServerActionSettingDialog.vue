@@ -3,20 +3,16 @@ import {EnumServerStatus, ServerRecord} from "../../types/Server";
 import {computed, ref, toRaw} from "vue";
 import {useServerStore} from "../../store/modules/server";
 import {Dialog} from "../../lib/dialog";
-import {clone, cloneDeep} from "lodash-es";
+import {cloneDeep} from "lodash-es";
 import {t} from "../../lang";
 
 const serverStore = useServerStore()
 const props = defineProps<{
     record: ServerRecord,
 }>()
-
 const visible = ref(false)
-const setting = ref({
-    port: '',
-    gpuMode: '',
-    entryCommand: '',
-})
+const settings = ref<any>([])
+const setting = ref({})
 const readonly = computed(() => {
     return ![
         EnumServerStatus.STOPPED,
@@ -26,9 +22,12 @@ const readonly = computed(() => {
 
 const show = () => {
     visible.value = true
-    setting.value.port = props.record.setting?.port || ''
-    setting.value.gpuMode = props.record.setting?.gpuMode || ''
-    setting.value.entryCommand = props.record.setting?.entryCommand || ''
+    settings.value = cloneDeep(props.record.settings)
+    const settingValue = {}
+    settings.value.forEach((s: any) => {
+        settingValue[s.name] = s.default
+    })
+    setting.value = settingValue
 }
 
 const doSubmit = async () => {
@@ -57,22 +56,26 @@ defineExpose({
         </template>
         <div>
             <a-form :model="{}">
-                <a-form-item field="port" :label="$t('服务端口')">
-                    <a-input :placeholder="$t('留空会检测使用随机端口')"
-                             :readonly="readonly"
-                             v-model="setting.port"/>
-                </a-form-item>
-                <a-form-item field="gpuMode" :label="$t('GPU模式')">
-                    <a-radio-group v-model="setting.gpuMode" :disabled="readonly">
-                        <a-radio value="">{{ $t('GPU优先') }}</a-radio>
-                        <a-radio value="cpu">{{ $t('使用CPU') }}</a-radio>
-                    </a-radio-group>
-                </a-form-item>
-                <a-form-item field="entryCommand" :label="$t('启动命令')">
-                    <a-input v-model="setting.entryCommand"
-                             :readonly="readonly"
-                             :placeholder="$t('留空使用默认启动命令')"/>
-                </a-form-item>
+                <div v-for="fs in settings">
+                    <a-form-item v-if="fs.type==='text'"
+                                 :field="fs.name"
+                                 :label="fs.title">
+                        <a-input :placeholder="fs.placeholder"
+                                 :readonly="readonly"
+                                 v-model="setting[fs.name]"/>
+                    </a-form-item>
+                    <a-form-item v-else-if="fs.type==='radio'"
+                                 :field="fs.name"
+                                 :label="fs.title">
+                        <a-radio-group v-model="setting[fs.name]"
+                                       :disabled="readonly">
+                            <a-radio v-for="option in fs.options"
+                                     :key="option.value"
+                                     :value="option.value">{{ option.label }}
+                            </a-radio>
+                        </a-radio-group>
+                    </a-form-item>
+                </div>
             </a-form>
         </div>
     </a-modal>

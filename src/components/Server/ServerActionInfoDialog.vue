@@ -2,15 +2,27 @@
 import {EnumServerType, ServerRecord} from "../../types/Server";
 import {ref} from "vue";
 import {functionToLabels} from "../../lib/aigcpanel";
+import {useServerStore} from "../../store/modules/server";
 
+const serverStore = useServerStore()
 const props = defineProps<{
     record: ServerRecord,
 }>()
 
+const httpUrl = ref('')
 const visible = ref(false)
 
-const show = () => {
+const show = async () => {
     visible.value = true
+    const serverInfo = await serverStore.serverInfo(props.record)
+    const res = await window.$mapi.server.config(serverInfo)
+    httpUrl.value = res.data?.httpUrl || ''
+}
+
+const doOpenHttpUrl = () => {
+    if (httpUrl.value) {
+        window.$mapi.app.openExternalWeb(httpUrl.value)
+    }
 }
 
 defineExpose({
@@ -29,26 +41,26 @@ defineExpose({
         <div>
             <div class="border rounded-lg p-3">
                 <div class="flex mb-4">
-                    <div class="w-20">{{$t('类型')}}</div>
+                    <div class="w-20">{{ $t('类型') }}</div>
                     <div>
                         <span v-if="record.type===EnumServerType.LOCAL">
                             <i class="iconfont icon-desktop mr-1"></i>
-                            {{ $t('本地模型')}}
+                            {{ $t('本地模型') }}
                         </span>
                         <span v-else-if="record.type===EnumServerType.REMOTE">
                             <i class="iconfont icon-network mr-1"></i>
-                            {{ $t('远程模型')}}
+                            {{ $t('远程模型') }}
                         </span>
                     </div>
                 </div>
                 <div class="flex mb-4">
-                    <div class="w-20">{{ $t('模型')}}</div>
+                    <div class="w-20">{{ $t('模型') }}</div>
                     <div>
                         {{ props.record.title }}
                     </div>
                 </div>
                 <div class="flex mb-4">
-                    <div class="w-20">{{ $t('版本')}}</div>
+                    <div class="w-20">{{ $t('版本') }}</div>
                     <div>
                         <a-tag>
                             v{{ props.record.version }}
@@ -56,7 +68,7 @@ defineExpose({
                     </div>
                 </div>
                 <div class="flex mb-4">
-                    <div class="w-20">{{ $t('功能')}}</div>
+                    <div class="w-20">{{ $t('功能') }}</div>
                     <div>
                         <a-tag v-for="label in functionToLabels(record.functions)" class="mr-1">
                             {{ label }}
@@ -64,7 +76,7 @@ defineExpose({
                     </div>
                 </div>
                 <div class="flex mb-4">
-                    <div class="w-20">{{ $t('标识')}}</div>
+                    <div class="w-20">{{ $t('标识') }}</div>
                     <div>
                         <span class="mr-2 text-sm bg-gray-100 px-2 leading-6 inline-block rounded-lg">
                             {{ props.record.name }}
@@ -72,13 +84,20 @@ defineExpose({
                     </div>
                 </div>
                 <div class="flex mb-4">
-                    <div class="w-20">{{$t('服务')}}</div>
+                    <div class="w-20">{{ $t('WEB服务') }}</div>
                     <div class="">
-                        <div v-if="props.record.runtime?.httpUrl" class="font-mono text-sm">
-                            {{ props.record.runtime?.httpUrl }}
+                        <div v-if="httpUrl" class="font-mono">
+                            <div class="inline-block mr-2">
+                                {{ httpUrl }}
+                            </div>
+                            <a-button size="mini" @click="doOpenHttpUrl">
+                                <template #icon>
+                                    <icon-link/>
+                                </template>
+                            </a-button>
                         </div>
-                        <div v-else class="text-gray-400 text-sm">
-                            {{ $t('未启动')}}
+                        <div v-else class="text-gray-400">
+                            {{ $t('未启动') }}
                         </div>
                     </div>
                 </div>

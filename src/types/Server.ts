@@ -19,11 +19,19 @@ export type ServerRecord = {
     type?: EnumServerType,
     functions: string[],
     localPath?: string,
-    localEntry?: string,
+    settings?: {
+        name: string,
+        type: string,
+        title: any,
+        default: any,
+        placeholder: string,
+        options?: {
+            value: any,
+            label: string,
+        }[]
+    }[]
     setting: {
-        port: string,
-        gpuMode: '' | 'cpu',
-        entryCommand: string,
+        [key: string]: any,
     },
     status?: any,
     runtime?: any,
@@ -31,8 +39,8 @@ export type ServerRecord = {
 
 export type ServerRuntime = {
     status: EnumServerStatus,
-    shellController: any,
-    httpUrl: string,
+    // shellController: any,
+    // httpUrl: string,
     logFile: string,
     pingCheckTimer?: any,
     startTimestampMS?: number,

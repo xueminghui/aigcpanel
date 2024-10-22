@@ -29,7 +29,12 @@ export const SoundTts: TaskBiz = {
     runFunc: async (bizId, bizParam) => {
         // console.log('SoundTts.runFunc', {bizId, bizParam})
         const {record, server} = await prepareData(bizId, bizParam)
-        const res = await serverStore.apiRequest(server, '/soundTts', {
+        const serverInfo = await serverStore.serverInfo(server)
+        // console.log('SoundTts.runFunc.serverInfo', serverInfo)
+        await SoundTtsService.update(bizId as any, {
+            status: 'running',
+        })
+        const res = await window.$mapi.server.callFunction(serverInfo, 'soundTts', {
             text: record.text,
             speaker: record.speaker,
             speed: parseFloat(record.speed as any),
@@ -42,41 +47,51 @@ export const SoundTts: TaskBiz = {
             }
             throw new Error('apiRequest soundTts fail')
         }
-        if (!res.data.jobId) {
-            return 'retry'
+        switch (res.data.type) {
+            case 'success':
+                await SoundTtsService.update(bizId as any, {
+                    status: 'success',
+                    jobId: '',
+                    jobResult: res,
+                })
+                return 'success'
+            case 'querying':
+                await SoundTtsService.update(bizId as any, {
+                    jobId: res.data.jobId,
+                })
+                return 'querying'
+            case 'retry':
+                return 'retry'
         }
-        await SoundTtsService.update(bizId as any, {
-            status: 'running',
-            jobId: res.data.jobId,
-        })
-        return 'success'
+        throw new Error('unknown res.data.type')
     },
     queryFunc: async (bizId, bizParam) => {
-        // console.log('SoundTts.queryFunc', {bizId, bizParam})
-        const {record, server} = await prepareData(bizId, bizParam)
-        // console.log('SoundTts.queryFunc.prepareData', {bizId, bizParam, record, server})
-        const res = await serverStore.apiRequest(server, '/query', {
-            jobId: record.jobId,
-        })
-        await SoundTtsService.update(bizId as any, {
-            jobResult: res,
-        })
-        // console.log('SoundTts.queryFunc.res', res)
-        if (res.code) {
-            if (res.msg) {
-                throw new Error(res.msg)
-            }
-            throw new Error('apiRequest query fail')
-        }
-        switch (res.data.status) {
-            case 'running':
-                return 'running'
-            case 'success':
-                return 'success'
-            case 'fail':
-            default:
-                return 'fail'
-        }
+        // // console.log('SoundTts.queryFunc', {bizId, bizParam})
+        // const {record, server} = await prepareData(bizId, bizParam)
+        // // console.log('SoundTts.queryFunc.prepareData', {bizId, bizParam, record, server})
+        // const res = await serverStore.apiRequest(server, '/query', {
+        //     jobId: record.jobId,
+        // })
+        // await SoundTtsService.update(bizId as any, {
+        //     jobResult: res,
+        // })
+        // // console.log('SoundTts.queryFunc.res', res)
+        // if (res.code) {
+        //     if (res.msg) {
+        //         throw new Error(res.msg)
+        //     }
+        //     throw new Error('apiRequest query fail')
+        // }
+        // switch (res.data.status) {
+        //     case 'running':
+        //         return 'running'
+        //     case 'success':
+        //         return 'success'
+        //     case 'fail':
+        //     default:
+        //         return 'fail'
+        // }
+        return 'fail'
     },
     successFunc: async (bizId, bizParam) => {
         // console.log('SoundTts.successFunc', {bizId, bizParam})

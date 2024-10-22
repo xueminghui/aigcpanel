@@ -101,7 +101,7 @@ export const SoundTtsService = {
         const fields = Object.keys(record)
         const values = fields.map(f => record[f])
         const set = fields.map(f => `${f} = ?`).join(',')
-        return await window.$mapi.db.execute(`UPDATE ${this.tableName()}
+        return await window.$mapi.db.update(`UPDATE ${this.tableName()}
                                               SET ${set}
                                               WHERE id = ?`, [...values, id])
     },

@@ -76,12 +76,8 @@ export const serverStore = defineStore("server", {
                     type: EnumServerType.LOCAL,
                     functions: json.functions || [],
                     localPath: `model/${dir.name}`,
-                    localEntry: json.entry || 'main',
-                    setting: {
-                        port: (json.setting?.port || '') as string,
-                        gpuMode: (json.setting?.gpuMode || '') as '' | 'cpu',
-                        entryCommand: (json.setting?.entryCommand || '') as string,
-                    }
+                    settings: json.settings || [],
+                    setting: json.setting || {},
                 } as ServerRecord)
             }
             let changed = false
@@ -92,6 +88,11 @@ export const serverStore = defineStore("server", {
                     lr.runtime = createServerRuntime(lr)
                     this.records.unshift(lr as any)
                     changed = true
+                } else {
+                    if (!record.settings && lr.settings) {
+                        record.settings = lr.settings
+                        changed = true
+                    }
                 }
             }
             if (changed) {
@@ -104,60 +105,39 @@ export const serverStore = defineStore("server", {
             } else {
                 throw new Error('StatusError')
             }
-            let port = 0
-            if (record.setting?.port) {
-                port = parseInt(record.setting.port)
-            } else {
-                port = await window.$mapi.app.availablePort(50617)
-            }
-            // console.log('record', JSON.stringify(record))
             const serverRuntime = getServerRuntime(server)
             serverRuntime.status = EnumServerStatus.STARTING
             serverRuntime.startTimestampMS = TimeUtil.timestampMS()
             serverRuntime.logFile = `logs/${server.name}_${server.version}_${TimeUtil.dateString()}_${serverRuntime.startTimestampMS}.log`
-            let command: string[] = []
-            if (record.setting?.entryCommand) {
-                command.push(record.setting.entryCommand)
-            } else {
-                const entryCommand = await window.$mapi.file.fullPath(`${record.localPath}/${record?.localEntry}`)
-                command.push(`"${entryCommand}"`)
-                command.push(`--port=${port}`)
-                if (record.setting?.gpuMode === 'cpu') {
-                    command.push('--gpu_mode=cpu')
-                }
-            }
-            serverRuntime.httpUrl = `http://127.0.0.1:${port}`
-            const shellController = await window.$mapi.app.spawnShell(command, {
-                stdout: (data) => {
-                    // serverStatus.value.set(server.name, EnumServerStatus.RUNNING)
-                    // console.log('Server.stdout', JSON.stringify(data))
-                    window.$mapi.file.appendText(serverRuntime.logFile, data)
-                },
-                stderr: (data) => {
-                    // console.log('Server.stderr', JSON.stringify(data))
-                    window.$mapi.file.appendText(serverRuntime.logFile, data)
-                },
-                success: (data) => {
-                    if (serverRuntime.pingCheckTimer) {
+            const eventChannel = await window.$mapi.event.channelCreate(function (channelData) {
+                const {type, data} = channelData
+                switch (type) {
+                    case 'success':
                         clearTimeout(serverRuntime.pingCheckTimer)
-                    }
-                    // console.log('Server.success', {data})
-                    serverRuntime.status = EnumServerStatus.STOPPED
-                },
-                error: (data, code) => {
-                    if (serverRuntime.pingCheckTimer) {
-                        clearTimeout(serverRuntime.pingCheckTimer)
-                    }
-                    if (serverRuntime.status === EnumServerStatus.STOPPING) {
                         serverRuntime.status = EnumServerStatus.STOPPED
-                    } else {
+                        window.$mapi.event.channelDestroy(eventChannel).then()
+                        break
+                    case 'error':
+                        clearTimeout(serverRuntime.pingCheckTimer)
                         serverRuntime.status = EnumServerStatus.ERROR
-                    }
-                    // console.log('Server.error', {code, data})
-                    window.$mapi.file.appendText(serverRuntime.logFile, data)
-                },
+                        window.$mapi.event.channelDestroy(eventChannel).then()
+                        break
+                    case 'starting':
+                        break
+                    default:
+                        console.log('eventChannel', type, data)
+                        break
+                }
             })
-            serverRuntime.shellController = shellController
+            const serverInfo = {
+                localPath: await window.$mapi.file.fullPath(server.localPath as string),
+                name: record.name,
+                version: record.version,
+                setting: toRaw(record.setting),
+                logFile: serverRuntime.logFile,
+                eventChannelName: eventChannel
+            }
+            await window.$mapi.server.start(serverInfo)
             let pingTimeout = 60 * 5 * 1000
             let pingStart = TimeUtil.timestampMS()
             const pingCheck = () => {
@@ -165,26 +145,18 @@ export const serverStore = defineStore("server", {
                 if (now - pingStart > pingTimeout) {
                     // console.log('ping.timeout')
                     serverRuntime.status = EnumServerStatus.ERROR
-                    try {
-                        shellController.stop()
-                    } catch (e) {
-                    }
+                    window.$mapi.server.stop(serverInfo)
                     return
                 }
-                fetch(`${serverRuntime.httpUrl}/ping`)
-                    .then(res => {
-                        res.json()
-                            .then(json => {
-                                // console.log('ping.res', json)
-                                serverRuntime.status = EnumServerStatus.RUNNING
-                            })
-                            .catch(err => {
-                                // console.log('ping.err', err)
-                                serverRuntime.pingCheckTimer = setTimeout(pingCheck, 5000)
-                            })
+                window.$mapi.server.ping(serverInfo)
+                    .then(success => {
+                        if (success) {
+                            serverRuntime.status = EnumServerStatus.RUNNING
+                        } else {
+                            serverRuntime.pingCheckTimer = setTimeout(pingCheck, 5000)
+                        }
                     })
                     .catch(err => {
-                        // console.log('ping.err', err)
                         serverRuntime.pingCheckTimer = setTimeout(pingCheck, 5000)
                     })
             }
@@ -198,10 +170,14 @@ export const serverStore = defineStore("server", {
             }
             const serverRuntime = getServerRuntime(server)
             serverRuntime.status = EnumServerStatus.STOPPING
-            try {
-                serverRuntime.shellController.stop()
-            } catch (e) {
+            const serverInfo = {
+                localPath: await window.$mapi.file.fullPath(server.localPath as string),
+                name: record.name,
+                version: record.version,
+                setting: toRaw(record.setting),
+                logFile: serverRuntime.logFile,
             }
+            await window.$mapi.server.stop(serverInfo)
         },
         async updateSetting(key: string, setting: any) {
             const record = this.records.find((record) => record.key === key)
@@ -243,33 +219,10 @@ export const serverStore = defineStore("server", {
         async getByNameVersion(name: string, version: string): Promise<ServerRecord | undefined> {
             return this.records.find((record) => record.name === name && record.version === version)
         },
-        async apiRequest(server: ServerRecord, path: string, data: any) {
-            if (server.status !== EnumServerStatus.RUNNING) {
-                return {
-                    code: -1,
-                    msg: 'ServerNotRunning'
-                }
-                // server.runtime.httpUrl = 'http://127.0.0.1:50617'
+        async serverInfo(server: ServerRecord) {
+            return {
+                localPath: await window.$mapi.file.fullPath(server.localPath as string),
             }
-            try {
-                const res = await fetch(`${server.runtime.httpUrl}${path}`, {
-                    method: 'POST',
-                    body: JSON.stringify(data),
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                return res.json()
-            } catch (e) {
-                console.error('RequestError', e)
-                return {
-                    code: -1,
-                    msg: 'RequestError',
-                }
-            }
-        },
-        async apiConfig(server: ServerRecord) {
-            return await this.apiRequest(server, '/config', {})
         }
     }
 })
