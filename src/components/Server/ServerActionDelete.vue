@@ -16,7 +16,7 @@ const emit = defineEmits({
 
 const doDelete = async () => {
     const record = props.record
-    await Dialog.confirm(t('确定删除模型 {title} 吗？', {title: record.title}))
+    await Dialog.confirm(t('确定删除模型 {title} v{version} 吗？', {title: record.title, version: record.version}))
     Dialog.loadingOn(t('正在删除'))
     await sleep(500)
     await serverStore.delete(record)

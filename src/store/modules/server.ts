@@ -82,7 +82,7 @@ export const serverStore = defineStore("server", {
             }
             let changed = false
             for (let lr of localRecords) {
-                const record = this.records.find((record) => record.name === lr.name)
+                const record = this.records.find((record) => record.key === lr.key)
                 if (!record) {
                     lr.status = createServerStatus(lr)
                     lr.runtime = createServerRuntime(lr)
@@ -99,8 +99,11 @@ export const serverStore = defineStore("server", {
                 await this.sync()
             }
         },
+        findRecord(server: ServerRecord) {
+            return this.records.find((record) => record.key = server.key)
+        },
         async start(server: ServerRecord) {
-            const record = this.records.find((record) => record.name === server.name)
+            const record = this.findRecord(server)
             if (record?.status === EnumServerStatus.STOPPED || record?.status === EnumServerStatus.ERROR) {
             } else {
                 throw new Error('StatusError')
@@ -163,7 +166,7 @@ export const serverStore = defineStore("server", {
             serverRuntime.pingCheckTimer = setTimeout(pingCheck, 10 * 1000)
         },
         async stop(server: ServerRecord) {
-            const record = this.records.find((record) => record.name === server.name)
+            const record = this.findRecord(server)
             if (record?.status === EnumServerStatus.RUNNING) {
             } else {
                 throw new Error('StatusError')
@@ -188,7 +191,7 @@ export const serverStore = defineStore("server", {
             await this.sync()
         },
         async delete(server: ServerRecord) {
-            const index = this.records.findIndex((record) => record.name === server.name)
+            const index = this.records.findIndex((record) => record.key === server.key)
             if (index === -1) {
                 return
             }

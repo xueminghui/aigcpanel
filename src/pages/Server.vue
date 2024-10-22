@@ -122,6 +122,9 @@ const typeName = (type: string) => {
                                 </div>
                                 <div class="inline-block mr-4">
                                     {{ record.title }}
+                                    <div class="inline-block rounded-3xl bg-gray-100 px-3">
+                                        v{{ record.version }}
+                                    </div>
                                 </div>
                             </div>
                             <div>

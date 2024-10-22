@@ -63,11 +63,12 @@ const doSubmit = async () => {
     isImporting.value = true
     logStatus.value = t('正在解压文件')
     try {
+        // console.log('unzip.start', modelInfo.value.path, target)
         await window.$mapi.misc.unzip(modelInfo.value.path, target, {
             process: (type: string, file: any) => {
                 switch (type) {
                     case 'start':
-                        // logAppend(t('正在解压 {name}', {name: file.fileName}))
+                        logStatus.value = t('正在解压 {name}', {name: file.fileName})
                         break
                     case 'end':
                         break
@@ -77,6 +78,7 @@ const doSubmit = async () => {
                 }
             },
         })
+        // console.log('unzip.end', modelInfo.value.path, target)
         // console.log('entry', modelInfo.value.entry)
         if (modelInfo.value.entry) {
             const executable = target + '/' + modelInfo.value.entry
@@ -210,7 +212,7 @@ const emit = defineEmits({
                                 {{ $t('重新选择') }}
                             </a-button>
                         </div>
-                        <div class="flex-grow pl-3">
+                        <div class="flex-grow pl-3 text-sm truncate">
                             {{ logStatus }}
                         </div>
                     </div>
