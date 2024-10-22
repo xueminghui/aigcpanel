@@ -14,8 +14,7 @@ const records = ref<SoundTtsRecord[]>([])
 const taskStore = useTaskStore()
 
 const taskChangeCallback = (bizId: string, type: TaskChangeType) => {
-    // console.log('taskChangeCallback', bizId, type)
-    doRefresh().then()
+    setTimeout(doRefresh, 1000)
 }
 
 onMounted(async () => {
