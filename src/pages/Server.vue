@@ -47,7 +47,7 @@ const typeName = (type: string) => {
             <div class="flex items-center">
                 <a-button v-if="serverStore.records.length>0"
                           class="ml-1"
-                          @click="importLocalDialog?.doSelectFile()">
+                          @click="importLocalDialog?.show()">
                     <template #icon>
                         <icon-upload/>
                     </template>

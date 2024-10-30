@@ -43,7 +43,7 @@ const emptyModelInfo = () => {
 
 const doSubmit = async () => {
     if (!modelInfo.value.path) {
-        Dialog.tipError(t('请选择模型文件'))
+        Dialog.tipError(t('请选择模型ZIP文件'))
         return
     }
     const target = await window.$mapi.file.fullPath(`model/${modelInfo.value.name}-${modelInfo.value.version}`)
@@ -153,14 +153,44 @@ const emit = defineEmits({
         <div>
             <div class="">
                 <div v-if="!modelInfo.name">
-                    <a-button @click="doSelectFile"
-                              class="block w-full"
-                              :loading="loading">
-                        <template #icon>
-                            <icon-file/>
-                        </template>
-                        {{ t('选择模型文件') }}
-                    </a-button>
+                    <div class="flex">
+                        <div class="w-1/2 px-3">
+                            <div>
+                                <img class="w-32 h-32 object-contain m-auto" src="./../../assets/image/server-file.svg" />
+                            </div>
+                            <div>
+                                <a-button @click="doSelectFile"
+                                          class="block w-full"
+                                          :loading="loading">
+                                    <template #icon>
+                                        <icon-file/>
+                                    </template>
+                                    {{ t('选择模型ZIP文件') }}
+                                </a-button>
+                            </div>
+                            <div class="mt-3 text-sm text-gray-400 rounded-lg">
+                                模型一键启动压缩包，包含模型服务的配置文件和模型服务程序文件。
+                            </div>
+                        </div>
+                        <div class="w-1/2 px-3">
+                            <div>
+                                <img class="w-32 h-32 object-contain m-auto" src="./../../assets/image/server-folder.svg" />
+                            </div>
+                            <div>
+                                <a-button @click="doSelectFile"
+                                          class="block w-full"
+                                          :loading="loading">
+                                    <template #icon>
+                                        <icon-folder/>s
+                                    </template>
+                                    {{ t('选择模型服务目录') }}
+                                </a-button>
+                            </div>
+                            <div class="mt-3 text-sm text-gray-400 rounded-lg">
+                                模型服务目录，包含模型服务的配置文件和模型服务程序文件。
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div v-else>
                     <div class="border rounded-lg py-4 leading-10">

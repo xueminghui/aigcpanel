@@ -1,6 +1,7 @@
 import {TaskBiz} from "../store/modules/task";
 import {useServerStore} from "../store/modules/server";
 import {SoundTtsService} from "../service/SoundTtsService";
+import {mapError} from "../lib/error";
 
 const serverStore = useServerStore()
 
@@ -44,8 +45,9 @@ export const SoundTts: TaskBiz = {
         if (res.code) {
             if (res.msg) {
                 throw new Error(res.msg)
+            } else {
+                throw new Error('apiRequest soundTts fail')
             }
-            throw new Error('apiRequest soundTts fail')
         }
         switch (res.data.type) {
             case 'success':

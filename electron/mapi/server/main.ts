@@ -27,22 +27,42 @@ const getModule = async (serverInfo: ServerInfo) => {
 
 ipcMain.handle('server:start', async (event, serverInfo: ServerInfo) => {
     const module = await getModule(serverInfo)
-    return await module.start(serverInfo)
+    try {
+        return await module.start(serverInfo)
+    } catch (e) {
+        Log.error('mapi.server.start.error', e)
+        throw new Error(e)
+    }
 })
 
 ipcMain.handle('server:ping', async (event, serverInfo: ServerInfo) => {
     const module = await getModule(serverInfo)
-    return await module.ping()
+    try {
+        return await module.ping()
+    } catch (e) {
+        Log.error('mapi.server.ping.error', e)
+        throw new Error(e)
+    }
 })
 
 ipcMain.handle('server:stop', async (event, serverInfo: ServerInfo) => {
     const module = await getModule(serverInfo)
-    return await module.stop(serverInfo)
+    try {
+        return await module.stop(serverInfo)
+    } catch (e) {
+        Log.error('mapi.server.stop.error', e)
+        throw new Error(e)
+    }
 })
 
 ipcMain.handle('server:config', async (event, serverInfo: ServerInfo) => {
     const module = await getModule(serverInfo)
-    return await module.config()
+    try {
+        return await module.config()
+    } catch (e) {
+        Log.error('mapi.server.config.error', e)
+        throw new Error(e)
+    }
 })
 
 ipcMain.handle('server:callFunction', async (event, serverInfo: ServerInfo, method: string, data: any) => {
@@ -53,7 +73,12 @@ ipcMain.handle('server:callFunction', async (event, serverInfo: ServerInfo, meth
     if (!func) {
         throw new Error(`MethodNotFound : ${method}`)
     }
-    return await func.bind(module)(serverInfo, data)
+    try {
+        return await func.bind(module)(serverInfo, data)
+    } catch (e) {
+        Log.error('mapi.server.callFunction.error', e)
+        throw new Error(e)
+    }
 })
 
 export default {
