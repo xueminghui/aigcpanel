@@ -104,7 +104,7 @@ const emit = defineEmits({
                         <i class="iconfont icon-server"></i>
                     </a-tooltip>
                 </div>
-                <div class="mr-3 w-64 flex-shrink-0">
+                <div class="mr-3 w-56 flex-shrink-0">
                     <ServerSelector v-model="formData.serverKey" functionName="soundTts"/>
                 </div>
                 <div class="mr-1" v-if="speakers.length>0">
@@ -113,7 +113,7 @@ const emit = defineEmits({
                     </a-tooltip>
                 </div>
                 <div class="mr-3 w-32" v-if="speakers.length>0">
-                    <a-select :placeholder="$t('选择角色')" size="small"
+                    <a-select :placeholder="$t('音色')" size="small"
                               v-model="formData.speaker">
                         <a-option v-for="s in speakers">
                             {{ s }}

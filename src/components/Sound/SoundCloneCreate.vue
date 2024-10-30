@@ -25,7 +25,7 @@ const formData = ref({
 onMounted(() => {
     const old = StorageUtil.getObject('SoundCloneCreate.formData')
     formData.value.serverKey = old.serverKey || ''
-    formData.value.promptName = old.speaker || ''
+    formData.value.promptName = old.sound-prompt || ''
     formData.value.speed = old.speed || 1.0
     formData.value.text = old.text || ''
     formData.value.seed = old.seed || '0'
@@ -48,12 +48,12 @@ const doSubmit = async () => {
         return
     }
     if (!formData.value.promptName) {
-        Dialog.tipError(t('请选择声音参考'))
+        Dialog.tipError(t('请选择声音角色'))
         return
     }
     const prompt = await soundClonePromptStore.getByName(formData.value.promptName)
     if (!prompt) {
-        Dialog.tipError(t('声音参考不存在'))
+        Dialog.tipError(t('声音角色不存在'))
         return
     }
     if (formData.value.seed === '') {
@@ -104,16 +104,16 @@ const emit = defineEmits({
                         <i class="iconfont icon-server"></i>
                     </a-tooltip>
                 </div>
-                <div class="mr-3 w-64 flex-shrink-0">
+                <div class="mr-3 w-56 flex-shrink-0">
                     <ServerSelector v-model="formData.serverKey" functionName="soundClone"/>
                 </div>
                 <div class="mr-1">
-                    <a-tooltip :content="$t('声音参考')">
-                        <i class="iconfont icon-speaker"></i>
+                    <a-tooltip :content="$t('声音角色')">
+                        <i class="iconfont icon-sound-prompt"></i>
                     </a-tooltip>
                 </div>
                 <div class="mr-3 w-32">
-                    <a-select :placeholder="$t('选择声音参考')" size="small"
+                    <a-select :placeholder="$t('声音角色')" size="small"
                               v-model="formData.promptName">
                         <a-option v-for="s in soundClonePromptStore.records">
                             {{ s.name }}

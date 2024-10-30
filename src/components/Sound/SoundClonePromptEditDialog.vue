@@ -82,7 +82,7 @@ const emit = defineEmits({
                 {{ $t('保存') }}
             </a-button>
         </template>
-        <div>
+        <div style="max-height:60vh;">
             <a-form :model="{}" layout="vertical">
                 <a-form-item :label="$t('名称')" required>
                     <a-input v-model="formData.name"/>

@@ -30,6 +30,8 @@ const doRefresh = async () => {
 const typeName = (type: string) => {
     if (EnumServerType.LOCAL === type) {
         return t('本地模型')
+    } else if (EnumServerType.LOCAL_DIR === type) {
+        return t('本地模型目录')
     } else if (EnumServerType.REMOTE === type) {
         return t('线上模型')
     }
@@ -49,9 +51,9 @@ const typeName = (type: string) => {
                           class="ml-1"
                           @click="importLocalDialog?.show()">
                     <template #icon>
-                        <icon-upload/>
+                        <icon-plus/>
                     </template>
-                    {{ $t('导入本地模型') }}
+                    {{ $t('添加模型服务') }}
                 </a-button>
                 <a-button v-if="0" class="ml-1">
                     <template #icon>
@@ -71,11 +73,11 @@ const typeName = (type: string) => {
                 </div>
                 <div class="mt-10 text-center">
                     <a-button class="ml-1"
-                              @click="importLocalDialog?.doSelectFile()">
+                              @click="importLocalDialog?.show()">
                         <template #icon>
-                            <icon-upload/>
+                            <icon-plus/>
                         </template>
-                        {{ $t('导入本地模型') }}
+                        {{ $t('添加模型服务') }}
                     </a-button>
                     <a-button v-if="0" class="ml-1">
                         <template #icon>
@@ -117,6 +119,8 @@ const typeName = (type: string) => {
                                                class="iconfont icon-network"></i>
                                             <i v-else-if="record.type===EnumServerType.LOCAL"
                                                class="iconfont icon-desktop"></i>
+                                            <i v-else-if="record.type===EnumServerType.LOCAL_DIR"
+                                               class="iconfont icon-folder"></i>
                                         </div>
                                     </a-tooltip>
                                 </div>

@@ -43,7 +43,7 @@ const doRefresh = async () => {
             <div class="flex items-center">
                 <a-button class="ml-1" @click="soundClonePromptDialog?.show()">
                     <template #icon>
-                        <icon-user/>
+                        <i class="iconfont icon-sound-prompt"></i>
                     </template>
                     {{ $t('声音角色') }}
                 </a-button>
@@ -74,7 +74,7 @@ const doRefresh = async () => {
                                     v{{ r.serverVersion }}
                                 </div>
                                 <div class="inline-block mr-4 bg-blue-100 rounded-lg px-2 leading-8 h-8">
-                                    <i class="iconfont icon-speaker mr-1"></i>
+                                    <i class="iconfont icon-sound-prompt mr-1"></i>
                                     {{ r.promptName }}
                                 </div>
                                 <div class="inline-block mr-4 bg-blue-100 rounded-lg px-2 leading-8 h-8">

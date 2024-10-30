@@ -4,10 +4,14 @@ import {Dialog} from "../../lib/dialog";
 import {t} from "../../lang";
 import {functionToLabels} from "../../lib/aigcpanel";
 import {mapError} from "../../lib/error";
+import {EnumServerType, ServerRecord} from "../../types/Server";
+import {useServerStore} from "../../store/modules/server";
 
+const serverStore = useServerStore()
 const visible = ref(false)
 const loading = ref(false)
 const modelInfo = ref({
+    type: EnumServerType.LOCAL as EnumServerType,
     name: '',
     version: '',
     title: '',
@@ -17,6 +21,8 @@ const modelInfo = ref({
     platformArch: '',
     entry: '',
     functions: [],
+    settings: [],
+    setting: {},
 })
 const isImporting = ref(false)
 const logStatus = ref('')
@@ -34,33 +40,21 @@ const functionLabels = computed(() => {
 })
 
 const emptyModelInfo = () => {
+    modelInfo.value.type = EnumServerType.LOCAL
     modelInfo.value.name = ''
     modelInfo.value.version = ''
     modelInfo.value.title = ''
     modelInfo.value.description = ''
     modelInfo.value.path = ''
+    modelInfo.value.platformName = ''
+    modelInfo.value.platformArch = ''
+    modelInfo.value.entry = ''
+    modelInfo.value.functions = []
+    modelInfo.value.settings = []
+    modelInfo.value.setting = {}
 }
 
-const doSubmit = async () => {
-    if (!modelInfo.value.path) {
-        Dialog.tipError(t('请选择模型ZIP文件'))
-        return
-    }
-    const target = await window.$mapi.file.fullPath(`model/${modelInfo.value.name}-${modelInfo.value.version}`)
-    const targetAbsolute = window.$mapi.file.absolutePath(target)
-    if (await window.$mapi.file.exists(targetAbsolute)) {
-        Dialog.tipError(t('模型相同版本已存在'))
-        return
-    }
-    if (window.$mapi.app.platformName() !== modelInfo.value.platformName) {
-        Dialog.tipError(t('模型平台不匹配'))
-        return
-    }
-    if (window.$mapi.app.platformArch() !== modelInfo.value.platformArch) {
-        Dialog.tipError(t('模型架构不匹配'))
-        return
-    }
-    isImporting.value = true
+const doSubmitLocal = async (target: string) => {
     logStatus.value = t('正在解压文件')
     try {
         // console.log('unzip.start', modelInfo.value.path, target)
@@ -96,10 +90,93 @@ const doSubmit = async () => {
         return
     }
     logStatus.value = t('文件解压完成')
-    Dialog.tipSuccess(t('模型文件导入成功'))
+}
+
+const doSubmitLocalDir = async () => {
+    await serverStore.add({
+        key: serverStore.generateServerKey({
+            name: modelInfo.value.name,
+            version: modelInfo.value.version,
+        } as any),
+        name: modelInfo.value.name,
+        title: modelInfo.value.title,
+        version: modelInfo.value.version,
+        type: modelInfo.value.type,
+        functions: modelInfo.value.functions,
+        localPath: modelInfo.value.path,
+        settings: modelInfo.value.settings,
+        setting: modelInfo.value.setting,
+    } as ServerRecord)
+}
+
+const doSubmit = async () => {
+    if (!modelInfo.value.path) {
+        return
+    }
+    const target = await window.$mapi.file.fullPath(`model/${modelInfo.value.name}-${modelInfo.value.version}`)
+    const targetAbsolute = window.$mapi.file.absolutePath(target)
+    if (await window.$mapi.file.exists(targetAbsolute)) {
+        Dialog.tipError(t('模型相同版本已存在'))
+        return
+    }
+    const exists = await serverStore.getByNameVersion(modelInfo.value.name, modelInfo.value.version)
+    if (exists) {
+        Dialog.tipError(t('模型相同版本已存在'))
+        return
+    }
+    if (window.$mapi.app.platformName() !== modelInfo.value.platformName) {
+        Dialog.tipError(t('模型平台不匹配'))
+        return
+    }
+    if (window.$mapi.app.platformArch() !== modelInfo.value.platformArch) {
+        Dialog.tipError(t('模型架构不匹配'))
+        return
+    }
+    isImporting.value = true
+    if (modelInfo.value.type === EnumServerType.LOCAL) {
+        await doSubmitLocal(target)
+    } else if (modelInfo.value.type === EnumServerType.LOCAL_DIR) {
+        await doSubmitLocalDir()
+    } else {
+        Dialog.tipError(t('模型类型错误'))
+        return
+    }
+    Dialog.tipSuccess(t('模型添加成功'))
     visible.value = false
     isImporting.value = false
     emit('update')
+}
+
+const doSelectFileDir = async () => {
+    const serverPath = await window.$mapi.file.openDirectory()
+    if (!serverPath) {
+        return
+    }
+    emptyModelInfo()
+    loading.value = true
+    try {
+        const content = await window.$mapi.file.read(serverPath + '/config.json', {
+            isFullPath: true
+        })
+        const json = JSON.parse(content)
+        modelInfo.value.type = EnumServerType.LOCAL_DIR
+        modelInfo.value.name = json.name || ''
+        modelInfo.value.version = json.version || ''
+        modelInfo.value.title = json.title || ''
+        modelInfo.value.description = json.description || ''
+        modelInfo.value.path = serverPath
+        modelInfo.value.platformName = json.platformName || ''
+        modelInfo.value.platformArch = json.platformArch || ''
+        modelInfo.value.entry = json.entry || ''
+        modelInfo.value.functions = json.functions || []
+        modelInfo.value.settings = json.settings || {}
+        modelInfo.value.setting = json.setting || {}
+        logStatus.value = ''
+    } catch (e) {
+        console.log('ServerImportLocalDialog.doSelectFileDir.error', e)
+        Dialog.tipError(t('模型目录识别失败，请选择正确的模型目录'))
+    }
+    loading.value = false
 }
 
 const doSelectFile = async () => {
@@ -108,11 +185,11 @@ const doSelectFile = async () => {
         return
     }
     emptyModelInfo()
-    visible.value = true
     loading.value = true
     try {
         const content = await window.$mapi.misc.getZipFileContent(serverPath, 'config.json')
         const json = JSON.parse(content)
+        modelInfo.value.type = EnumServerType.LOCAL
         modelInfo.value.name = json.name || ''
         modelInfo.value.version = json.version || ''
         modelInfo.value.title = json.title || ''
@@ -148,7 +225,7 @@ const emit = defineEmits({
              :mask-closable="false"
              title-align="start">
         <template #title>
-            {{ $t('导入本地模型') }}
+            {{ $t('添加模型服务') }}
         </template>
         <div>
             <div class="">
@@ -156,7 +233,8 @@ const emit = defineEmits({
                     <div class="flex">
                         <div class="w-1/2 px-3">
                             <div>
-                                <img class="w-32 h-32 object-contain m-auto" src="./../../assets/image/server-file.svg" />
+                                <img class="w-32 h-32 object-contain m-auto"
+                                     src="./../../assets/image/server-file.svg"/>
                             </div>
                             <div>
                                 <a-button @click="doSelectFile"
@@ -174,14 +252,15 @@ const emit = defineEmits({
                         </div>
                         <div class="w-1/2 px-3">
                             <div>
-                                <img class="w-32 h-32 object-contain m-auto" src="./../../assets/image/server-folder.svg" />
+                                <img class="w-32 h-32 object-contain m-auto"
+                                     src="./../../assets/image/server-folder.svg"/>
                             </div>
                             <div>
-                                <a-button @click="doSelectFile"
+                                <a-button @click="doSelectFileDir"
                                           class="block w-full"
                                           :loading="loading">
                                     <template #icon>
-                                        <icon-folder/>s
+                                        <icon-folder/>
                                     </template>
                                     {{ t('选择模型服务目录') }}
                                 </a-button>
@@ -231,13 +310,14 @@ const emit = defineEmits({
                                 <template #icon>
                                     <icon-check/>
                                 </template>
-                                {{ $t('确认导入') }}
+                                {{ $t('确认提交') }}
                             </a-button>
                             <a-button class="mr-2"
                                       v-if="!isImporting"
-                                      @click="doSelectFile" :loading="loading">
+                                      @click="emptyModelInfo"
+                                      :loading="loading">
                                 <template #icon>
-                                    <icon-upload/>
+                                    <icon-redo/>
                                 </template>
                                 {{ $t('重新选择') }}
                             </a-button>

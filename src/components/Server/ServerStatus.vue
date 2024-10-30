@@ -12,9 +12,9 @@ const props = defineProps<Props>()
 const statusColor = computed(() => {
     const colorMap = {
         [EnumServerStatus.STOPPED]: 'bg-gray-400',
-        [EnumServerStatus.STARTING]: 'bg-gray-400',
+        [EnumServerStatus.STARTING]: 'bg-yellow-500',
         [EnumServerStatus.RUNNING]: 'bg-green-500',
-        [EnumServerStatus.STOPPING]: 'bg-gray-400',
+        [EnumServerStatus.STOPPING]: 'bg-yellow-400',
         [EnumServerStatus.ERROR]: 'bg-red-500',
     }
     return colorMap[props.status as string] || 'bg-gray-400'

@@ -9,33 +9,29 @@ import {TimeUtil} from "../../lib/util";
 
 const serverRuntime = ref<Map<string, ServerRuntime>>(new Map())
 const createServerStatus = (record: ServerRecord): ComputedRef<EnumServerStatus> => {
-    const key = `${record.name}-${record.version}`
     return computed(() => {
-        return serverRuntime.value?.get(key)?.status || EnumServerStatus.STOPPED
+        return serverRuntime.value?.get(record.key)?.status || EnumServerStatus.STOPPED
     })
 }
 const createServerRuntime = (record: ServerRecord): ComputedRef<ServerRuntime> => {
-    const key = `${record.name}-${record.version}`
     return computed(() => {
-        return serverRuntime.value?.get(key) || {
+        return serverRuntime.value?.get(record.key) || {
             status: EnumServerStatus.STOPPED,
         } as ServerRuntime
     })
 }
 const getServerRuntime = (record: ServerRecord): ServerRuntime => {
-    const key = `${record.name}-${record.version}`
-    const value = serverRuntime.value?.get(key)
+    const value = serverRuntime.value?.get(record.key)
     if (value) {
         return value
     }
-    serverRuntime.value?.set(key, {
+    serverRuntime.value?.set(record.key, {
         status: EnumServerStatus.STOPPED,
     } as ServerRuntime)
-    return serverRuntime.value?.get(key) as ServerRuntime
+    return serverRuntime.value?.get(record.key) as ServerRuntime
 }
 const deleteServerRuntime = (record: ServerRecord) => {
-    const key = `${record.name}-${record.version}`
-    serverRuntime.value?.delete(key)
+    serverRuntime.value?.delete(record.key)
 }
 
 export const serverStore = defineStore("server", {
@@ -69,7 +65,10 @@ export const serverStore = defineStore("server", {
                     continue
                 }
                 localRecords.push({
-                    key: `${json.name}|${json.version}`,
+                    key: this.generateServerKey({
+                        name: json.name || dir.name,
+                        version: json.version || '1.0.0',
+                    } as any),
                     name: json.name || dir.name,
                     title: json.title || dir.name,
                     version: json.version || '1.0.0',
@@ -132,14 +131,9 @@ export const serverStore = defineStore("server", {
                         break
                 }
             })
-            const serverInfo = {
-                localPath: await window.$mapi.file.fullPath(server.localPath as string),
-                name: record.name,
-                version: record.version,
-                setting: toRaw(record.setting),
-                logFile: serverRuntime.logFile,
-                eventChannelName: eventChannel
-            }
+            const serverInfo = await this.serverInfo(server)
+            serverInfo.logFile = serverRuntime.logFile
+            serverInfo.eventChannelName = eventChannel
             await window.$mapi.server.start(serverInfo)
             let pingTimeout = 60 * 5 * 1000
             let pingStart = TimeUtil.timestampMS()
@@ -173,13 +167,8 @@ export const serverStore = defineStore("server", {
             }
             const serverRuntime = getServerRuntime(server)
             serverRuntime.status = EnumServerStatus.STOPPING
-            const serverInfo = {
-                localPath: await window.$mapi.file.fullPath(server.localPath as string),
-                name: record.name,
-                version: record.version,
-                setting: toRaw(record.setting),
-                logFile: serverRuntime.logFile,
-            }
+            const serverInfo = await this.serverInfo(server)
+            serverInfo.logFile = serverRuntime.logFile
             await window.$mapi.server.stop(serverInfo)
         },
         async updateSetting(key: string, setting: any) {
@@ -208,6 +197,16 @@ export const serverStore = defineStore("server", {
             deleteServerRuntime(server)
             await this.sync()
         },
+        async add(server: ServerRecord) {
+            let record = this.records.find((record) => record.key === server.key)
+            if (record) {
+                return
+            }
+            server.status = createServerStatus(server)
+            server.runtime = createServerRuntime(server)
+            this.records.unshift(server)
+            await this.sync()
+        },
         async sync() {
             const savedRecords = toRaw(cloneDeep(this.records))
             savedRecords.forEach((record) => {
@@ -222,10 +221,24 @@ export const serverStore = defineStore("server", {
         async getByNameVersion(name: string, version: string): Promise<ServerRecord | undefined> {
             return this.records.find((record) => record.name === name && record.version === version)
         },
+        generateServerKey(server: ServerRecord) {
+            return `${server.name}|${server.version}`
+        },
         async serverInfo(server: ServerRecord) {
-            return {
-                localPath: await window.$mapi.file.fullPath(server.localPath as string),
+            const result = {
+                localPath: '',
+                name: server.name,
+                version: server.version,
+                setting: toRaw(server.setting),
+                logFile: '',
+                eventChannelName: '',
             }
+            if (server.type === EnumServerType.LOCAL) {
+                result.localPath = await window.$mapi.file.fullPath(server.localPath as string)
+            } else if (server.type === EnumServerType.LOCAL_DIR) {
+                result.localPath = server.localPath as string
+            }
+            return result
         }
     }
 })

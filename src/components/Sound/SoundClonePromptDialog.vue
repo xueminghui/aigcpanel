@@ -63,21 +63,23 @@ defineExpose({
                     {{ $t('添加') }}
                 </a-button>
             </div>
-            <a-table :scroll="{maxHeight:'40vh'}"
-                     :columns="columns"
-                     :pagination="false"
-                     :data="soundClonePromptStore.records">
-                <template #promptPlayer="{ record }">
-                    <AudioPlayer show-wave :url="'file://'+record.promptWav"/>
-                </template>
-                <template #operate="{ record }">
-                    <a-button @click="doDelete(record)">
-                        <template #icon>
-                            <icon-delete/>
-                        </template>
-                    </a-button>
-                </template>
-            </a-table>
+            <div style="height:60vh;">
+                <a-table :scroll="{maxHeight:'60vh'}"
+                         :columns="columns"
+                         :pagination="false"
+                         :data="soundClonePromptStore.records">
+                    <template #promptPlayer="{ record }">
+                        <AudioPlayer show-wave :url="'file://'+record.promptWav"/>
+                    </template>
+                    <template #operate="{ record }">
+                        <a-button @click="doDelete(record)">
+                            <template #icon>
+                                <icon-delete/>
+                            </template>
+                        </a-button>
+                    </template>
+                </a-table>
+            </div>
         </div>
     </a-modal>
     <SoundClonePromptEditDialog ref="soundClonePromptEditDialog"/>

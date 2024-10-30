@@ -47,6 +47,10 @@ defineExpose({
                             <i class="iconfont icon-desktop mr-1"></i>
                             {{ $t('本地模型') }}
                         </span>
+                        <span v-else-if="record.type===EnumServerType.LOCAL_DIR">
+                            <i class="iconfont icon-folder mr-1"></i>
+                            {{ $t('本地模型目录') }}
+                        </span>
                         <span v-else-if="record.type===EnumServerType.REMOTE">
                             <i class="iconfont icon-network mr-1"></i>
                             {{ $t('远程模型') }}
@@ -84,7 +88,7 @@ defineExpose({
                     </div>
                 </div>
                 <div class="flex mb-4">
-                    <div class="w-20">{{ $t('WEB服务') }}</div>
+                    <div class="w-20">{{ $t('服务') }}</div>
                     <div class="">
                         <div v-if="httpUrl" class="font-mono">
                             <div class="inline-block mr-2">
@@ -96,7 +100,7 @@ defineExpose({
                                 </template>
                             </a-button>
                         </div>
-                        <div v-else class="text-gray-400">
+                        <div v-else class="text-gray-400 text-sm leading-7">
                             {{ $t('未启动') }}
                         </div>
                     </div>

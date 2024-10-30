@@ -1,8 +1,8 @@
 {
     "name": "aigcpanel",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "main": "dist-electron/main/index.js",
-    "description": "Use AIGC Model Easily!",
+    "description": "一站式AI数字人系统",
     "author": "ModStartLib",
     "license": "AGPL-3.0",
     "private": true,

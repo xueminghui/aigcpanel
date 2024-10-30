@@ -8,6 +8,7 @@ export enum EnumServerStatus {
 
 export enum EnumServerType {
     LOCAL = 'local',
+    LOCAL_DIR = 'localDir',
     REMOTE = 'remote',
 }
 
