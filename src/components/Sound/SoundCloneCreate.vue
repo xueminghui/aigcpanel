@@ -8,6 +8,8 @@ import {SoundCloneRecord, SoundCloneService} from "../../service/SoundCloneServi
 import {StorageUtil} from "../../lib/storage";
 import {useSoundClonePromptStore} from "../../store/modules/soundClonePrompt";
 import {t} from "../../lang";
+import ServerStatus from "../Server/ServerStatus.vue";
+import {EnumServerStatus} from "../../types/Server";
 
 const soundClonePromptStore = useSoundClonePromptStore()
 const serverStore = useServerStore()
@@ -25,7 +27,7 @@ const formData = ref({
 onMounted(() => {
     const old = StorageUtil.getObject('SoundCloneCreate.formData')
     formData.value.serverKey = old.serverKey || ''
-    formData.value.promptName = old.sound-prompt || ''
+    formData.value.promptName = old.promptName || ''
     formData.value.speed = old.speed || 1.0
     formData.value.text = old.text || ''
     formData.value.seed = old.seed || '0'
@@ -67,6 +69,10 @@ const doSubmit = async () => {
     const server = await serverStore.getByKey(formData.value.serverKey)
     if (!server) {
         Dialog.tipError(t('模型不存在'))
+        return
+    }
+    if (server.status !== EnumServerStatus.RUNNING) {
+        Dialog.tipError(t('模型未启动'))
         return
     }
     const record: SoundCloneRecord = {
@@ -130,12 +136,12 @@ const emit = defineEmits({
                               show-tooltip :min="0.5" :max="2" :step="0.1"/>
                 </div>
                 <div class="mr-2">
-                    <a-popover>
+                    <a-popover position="bottom">
                         <i class="iconfont icon-seed"></i>
                         <template #content>
                             <div class="text-sm">
                                 <div class="font-bold mb-2">{{ $t('随机推理种子') }}</div>
-                                <div>{{ $t('相同的种子可以确保每次生成结果数据一致') }}</div>
+                                <div class="w-32">{{ $t('相同的种子可以确保每次生成结果数据一致') }}</div>
                             </div>
                         </template>
                     </a-popover>
@@ -152,9 +158,19 @@ const emit = defineEmits({
                     </a-tooltip>
                 </div>
                 <div>
-                    <a-checkbox v-model="formData.crossLingual">
-                        {{ $t('跨语种') }}
-                    </a-checkbox>
+                    <a-popover position="bottom">
+                        <a-checkbox v-model="formData.crossLingual">
+                            {{ $t('跨语种') }}
+                        </a-checkbox>
+                        <template #content>
+                            <div class="text-sm">
+                                <div class="font-bold mb-2">{{ $t('跨语种') }}</div>
+                                <div class="w-32">
+                                    {{ $t('部分模型在跨语种克隆时需要特殊处理，因此需要标记是否为跨语种克隆') }}
+                                </div>
+                            </div>
+                        </template>
+                    </a-popover>
                 </div>
             </div>
             <div class="flex items-center">

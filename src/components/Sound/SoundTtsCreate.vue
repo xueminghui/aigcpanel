@@ -8,6 +8,7 @@ import {SoundTtsRecord, SoundTtsService} from "../../service/SoundTtsService";
 import {StorageUtil} from "../../lib/storage";
 import {mapError} from "../../lib/error";
 import {t} from "../../lang";
+import {EnumServerStatus} from "../../types/Server";
 
 const serverStore = useServerStore()
 
@@ -74,6 +75,10 @@ const doSubmit = async () => {
         Dialog.tipError(t('模型不存在'))
         return
     }
+    if (server.status !== EnumServerStatus.RUNNING) {
+        Dialog.tipError(t('模型未启动'))
+        return
+    }
     const record: SoundTtsRecord = {
         serverName: server.name,
         serverTitle: server.title,
@@ -107,44 +112,48 @@ const emit = defineEmits({
                 <div class="mr-3 w-56 flex-shrink-0">
                     <ServerSelector v-model="formData.serverKey" functionName="soundTts"/>
                 </div>
-                <div class="mr-1" v-if="speakers.length>0">
+                <div class="mr-1">
                     <a-tooltip :content="$t('音色')">
                         <i class="iconfont icon-speaker"></i>
                     </a-tooltip>
                 </div>
-                <div class="mr-3 w-32" v-if="speakers.length>0">
+                <div class="mr-3 w-32">
                     <a-select :placeholder="$t('音色')" size="small"
+                              :disabled="!speakers.length"
                               v-model="formData.speaker">
                         <a-option v-for="s in speakers">
                             {{ s }}
                         </a-option>
                     </a-select>
                 </div>
-                <div v-if="formData.serverKey">
+                <div>
                     <a-tooltip :content="$t('音速')">
                         <i class="iconfont icon-speed"></i>
                     </a-tooltip>
                 </div>
-                <div v-if="formData.serverKey" class="mr-4 w-48 flex-shrink-0">
+                <div class="mr-4 w-48 flex-shrink-0">
                     <a-slider v-model="formData.speed" :marks="{'0.5':t('慢'),'1':t('正常'),'2':t('快')}"
+                              :disabled="!formData.serverKey"
                               show-tooltip
                               :min="0.5" :max="2" :step="0.1"/>
                 </div>
-                <div v-if="formData.serverKey" class="mr-2">
-                    <a-popover>
+                <div class="mr-2">
+                    <a-popover position="bottom">
                         <i class="iconfont icon-seed"></i>
                         <template #content>
                             <div class="text-sm">
                                 <div class="font-bold mb-2">{{ $t('随机推理种子') }}</div>
-                                <div>{{ $t('相同的种子可以确保每次生成结果数据一致') }}</div>
+                                <div class="w-32">{{ $t('相同的种子可以确保每次生成结果数据一致') }}</div>
                             </div>
                         </template>
                     </a-popover>
                 </div>
-                <div v-if="formData.serverKey" class="mr-1 w-20 flex-shrink-0">
-                    <a-input v-model="formData.seed" class="pb-seed-input" size="small"/>
+                <div class="mr-1 w-20 flex-shrink-0">
+                    <a-input v-model="formData.seed"
+                             :disabled="!formData.serverKey"
+                             class="pb-seed-input" size="small"/>
                 </div>
-                <div v-if="formData.serverKey" class="mr-4">
+                <div class="mr-4">
                     <a-tooltip :content="$t('随机生成')">
                         <a class="inline-block" href="javascript:;"
                            @click="doRandomSeed">
