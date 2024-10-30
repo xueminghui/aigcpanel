@@ -6,13 +6,21 @@ import SoundTts from "./Sound/SoundTts.vue";
 import SoundClone from "./Sound/SoundClone.vue";
 import VideoGen from "./Video/VideoGen.vue";
 
-const tab = ref('soundTts');
+const tab = ref('videoGen');
 
 </script>
 
 <template>
     <div class="pb-device-container h-full relative select-none flex">
         <div class="p-5 w-52 flex-shrink-0 border-r border-solid border-gray-100">
+            <div class="p-2 rounded-lg mr-2 mb-4 cursor-pointer"
+                 :class="tab === 'videoGen' ? 'bg-gray-100' : ''"
+                 @click="tab = 'videoGen'">
+                <div class="text-base">
+                    <i class="iconfont icon-video"></i>
+                    {{ t('视频合成') }}
+                </div>
+            </div>
             <div class="p-2 rounded-lg mr-2 mb-4 cursor-pointer"
                  :class="tab === 'soundTts' ? 'bg-gray-100' : ''"
                  @click="tab = 'soundTts'">
@@ -27,14 +35,6 @@ const tab = ref('soundTts');
                 <div class="text-base">
                     <i class="iconfont icon-sound-clone"></i>
                     {{ t('声音克隆') }}
-                </div>
-            </div>
-            <div class="p-2 rounded-lg mr-2 mb-4 cursor-pointer"
-                 :class="tab === 'videoGen' ? 'bg-gray-100' : ''"
-                 @click="tab = 'videoGen'">
-                <div class="text-base">
-                    <i class="iconfont icon-sound-generate"></i>
-                    {{ t('视频合成') }}
                 </div>
             </div>
         </div>

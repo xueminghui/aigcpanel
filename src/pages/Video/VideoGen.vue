@@ -1,5 +1,9 @@
 <script setup lang="ts">
 
+import VideoTemplateDialog from "../../components/Video/VideoTemplateDialog.vue";
+import {ref} from "vue";
+
+const videoTemplateDialog = ref<InstanceType<typeof VideoTemplateDialog>>(null)
 </script>
 
 <template>
@@ -9,7 +13,8 @@
                 {{ $t('视频合成') }}
             </div>
             <div class="flex items-center">
-                <a-button class="ml-1">
+                <a-button class="ml-1"
+                          @click="videoTemplateDialog?.show()">
                     <template #icon>
                         <i class="iconfont icon-video-template"></i>
                     </template>
@@ -28,6 +33,7 @@
         <div>
         </div>
     </div>
+    <VideoTemplateDialog ref="videoTemplateDialog"/>
 </template>
 
 <style scoped>
