@@ -1,6 +1,6 @@
 import ServerApi from './api'
 import {ipcMain} from "electron";
-import file from "../file";
+import {Log} from "../log/main";
 
 const serverModule = {}
 
@@ -18,7 +18,7 @@ const getModule = async (serverInfo: ServerInfo) => {
             await module.default.init(ServerApi)
             serverModule[serverInfo.localPath] = module.default
         } catch (e) {
-            console.error('getModule.error', e)
+            Log.error('mapi.server.getModule.error', e)
             throw new Error(e)
         }
     }
