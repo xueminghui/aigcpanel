@@ -2,7 +2,7 @@
 import {ref} from "vue";
 import VideoTemplateEditDialog from "./VideoTemplateEditDialog.vue";
 import {Dialog} from "../../lib/dialog";
-import AudioPlayer from "../common/AudioPlayer.vue";
+import VideoPlayer from "../common/VideoPlayer.vue";
 import {t} from "../../lang";
 import {VideoTemplateRecord, VideoTemplateService} from "../../service/VideoTemplateService";
 
@@ -38,7 +38,12 @@ const columns = [
 
 const doDelete = async (record: VideoTemplateRecord) => {
     await Dialog.confirm(t('确认删除？'))
+    const videoPath = record.video
+    await window.$mapi.file.deletes(videoPath, {
+        isFullPath: true
+    })
     await VideoTemplateService.delete(record.id as number)
+    await doRefresh()
 }
 
 defineExpose({
@@ -69,7 +74,9 @@ defineExpose({
                          :pagination="false"
                          :data="records">
                     <template #video="{ record }">
-                        <AudioPlayer show-wave :url="'file://'+record.video"/>
+                        <div class="w-64 h-44">
+                            <VideoPlayer :url="'file://'+record.video"/>
+                        </div>
                     </template>
                     <template #operate="{ record }">
                         <a-button @click="doDelete(record)">
@@ -82,5 +89,5 @@ defineExpose({
             </div>
         </div>
     </a-modal>
-    <VideoTemplateEditDialog ref="videoTemplateEditDialog"/>
+    <VideoTemplateEditDialog @update="doRefresh" ref="videoTemplateEditDialog"/>
 </template>
