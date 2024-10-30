@@ -2,6 +2,7 @@ import {useTaskStore} from "../store/modules/task";
 import {SoundTts} from "./SoundTts";
 import {nextTick} from "vue";
 import {SoundClone} from "./SoundClone";
+import {VideoGen} from "./VideoGen";
 
 const taskStore = useTaskStore()
 
@@ -9,9 +10,11 @@ export const TaskManager = {
     init() {
         taskStore.register('SoundTts', SoundTts)
         taskStore.register('SoundClone', SoundClone)
+        taskStore.register('VideoGen', VideoGen)
         nextTick(async () => {
             await SoundTts.restore?.()
             await SoundClone.restore?.()
+            await VideoGen.restore?.()
         }).then()
         // taskStore.register('TestSync', TestSync)
         // taskStore.register('TestAsync', TestAsync)

@@ -66,9 +66,11 @@ const versions = [
                     serverTitle TEXT,
                     serverVersion TEXT,
                     videoTemplateId INTEGER,
-                    videoTemplate TEXT,
+                    videoTemplateName TEXT,
                     soundType TEXT,
-                    soundId INTEGER,
+                    soundTtsId INTEGER,
+                    soundCloneId INTEGER,
+
                     param TEXT,
 
                     status TEXT,

@@ -4,18 +4,26 @@ import ServerSelector from "../Server/ServerSelector.vue";
 import {onMounted, ref, watch} from "vue";
 import {useServerStore} from "../../store/modules/server";
 import {Dialog} from "../../lib/dialog";
-import {SoundCloneRecord, SoundCloneService} from "../../service/SoundCloneService";
 import {StorageUtil} from "../../lib/storage";
-import {useSoundClonePromptStore} from "../../store/modules/soundClonePrompt";
 import {t} from "../../lang";
-import ServerStatus from "../Server/ServerStatus.vue";
+import {SoundTtsRecord, SoundTtsService} from "../../service/SoundTtsService";
+import {SoundCloneRecord, SoundCloneService} from "../../service/SoundCloneService";
+import {VideoTemplateRecord, VideoTemplateService} from "../../service/VideoTemplateService";
 import {EnumServerStatus} from "../../types/Server";
+import {VideoGenRecord, VideoGenService} from "../../service/VideoGenService";
 
 const serverStore = useServerStore()
 
 const formData = ref({
     serverKey: '',
+    videoTemplateId: 0,
+    soundType: 'soundTts',
+    soundTtsId: 0,
+    soundCloneId: 0,
 });
+const soundTtsRecords = ref<SoundTtsRecord[]>([])
+const soundCloneRecords = ref<SoundCloneRecord[]>([])
+const videoTemplateRecords = ref<VideoTemplateRecord[]>([])
 
 onMounted(() => {
     const old = StorageUtil.getObject('VideoGenCreate.formData')
@@ -28,6 +36,19 @@ watch(() => formData.value, async (value) => {
     deep: true
 })
 
+watch(() => formData.value.soundType, async (value) => {
+    if (value === 'soundTts') {
+        soundTtsRecords.value = await SoundTtsService.list()
+    } else if (value === 'soundClone') {
+        soundCloneRecords.value = await SoundCloneService.list()
+    }
+}, {
+    immediate: true
+})
+
+onMounted(async () => {
+    videoTemplateRecords.value = await VideoTemplateService.list()
+})
 
 const doRandomSeed = () => {
     // formData.value.seed = Math.floor(Math.random() * 1000000) + ''
@@ -38,49 +59,48 @@ const doSubmit = async () => {
         Dialog.tipError(t('请选择模型'))
         return
     }
-    // if (!formData.value.promptName) {
-    //     Dialog.tipError(t('请选择声音角色'))
-    //     return
-    // }
-    // const prompt = await soundClonePromptStore.getByName(formData.value.promptName)
-    // if (!prompt) {
-    //     Dialog.tipError(t('声音角色不存在'))
-    //     return
-    // }
-    // if (formData.value.seed === '') {
-    //     Dialog.tipError(t('请输入随机种子'))
-    //     return
-    // }
-    // if (!formData.value.text) {
-    //     Dialog.tipError(t('请输入合成内容'))
-    //     return
-    // }
-    // const server = await serverStore.getByKey(formData.value.serverKey)
-    // if (!server) {
-    //     Dialog.tipError(t('模型不存在'))
-    //     return
-    // }
-    // if (server.status !== EnumServerStatus.RUNNING) {
-    //     Dialog.tipError(t('模型未启动'))
-    //     return
-    // }
-    // const record: SoundCloneRecord = {
-    //     serverName: server.name,
-    //     serverTitle: server.title,
-    //     serverVersion: server.version,
-    //     promptName: prompt.name,
-    //     promptWav: prompt.promptWav,
-    //     promptText: prompt.promptText,
-    //     text: formData.value.text,
-    //     speed: formData.value.speed,
-    //     seed: parseInt(formData.value.seed),
-    //     param: {
-    //         CrossLingual: formData.value.crossLingual
-    //     }
-    // }
-    // const id = await SoundCloneService.submit(record)
-    // formData.value.text = ''
-    // Dialog.tipSuccess(t('任务已经提交成功，等待克隆完成'))
+    if (formData.value.soundType === 'soundTts') {
+        if (!formData.value.soundTtsId) {
+            Dialog.tipError(t('请选择声音'))
+            return
+        }
+    } else if (formData.value.soundType === 'soundClone') {
+        if (!formData.value.soundCloneId) {
+            Dialog.tipError(t('请选择声音'))
+            return
+        }
+    }
+    if (!formData.value.videoTemplateId) {
+        Dialog.tipError(t('请选择视频'))
+        return
+    }
+    const videoTemplate = await VideoTemplateService.get(formData.value.videoTemplateId)
+    if (!videoTemplate) {
+        Dialog.tipError(t('请选择视频'))
+        return
+    }
+    const server = await serverStore.getByKey(formData.value.serverKey)
+    if (!server) {
+        Dialog.tipError(t('模型不存在'))
+        return
+    }
+    if (server.status !== EnumServerStatus.RUNNING) {
+        Dialog.tipError(t('模型未启动'))
+        return
+    }
+    const record: VideoGenRecord = {
+        serverName: server.name,
+        serverTitle: server.title,
+        serverVersion: server.version,
+        videoTemplateId: videoTemplate.id as number,
+        videoTemplateName: videoTemplate.name,
+        soundType: formData.value.soundType,
+        soundTtsId: formData.value.soundTtsId as number,
+        soundCloneId: formData.value.soundCloneId,
+        param: {}
+    }
+    const id = await VideoGenService.submit(record)
+    Dialog.tipSuccess(t('任务已经提交成功，等待视频生成完成'))
     emit('submitted')
 }
 
@@ -97,80 +117,89 @@ const emit = defineEmits({
                 <div class="mr-1">
                     <a-tooltip :content="$t('模型')">
                         <i class="iconfont icon-server"></i>
+                        {{ $t('模型') }}
                     </a-tooltip>
                 </div>
                 <div class="mr-3 w-56 flex-shrink-0">
-                    <ServerSelector v-model="formData.serverKey" functionName="soundClone"/>
+                    <ServerSelector v-model="formData.serverKey" functionName="videoGen"/>
                 </div>
+            </div>
+        </div>
+        <div class="flex items-center">
+            <div class="flex-grow flex items-center h-12">
                 <div class="mr-1">
-                    <a-tooltip :content="$t('声音角色')">
-                        <i class="iconfont icon-sound-prompt"></i>
+                    <a-tooltip :content="$t('声音')">
+                        <i class="iconfont icon-sound"></i>
+                        {{ $t('声音') }}
                     </a-tooltip>
                 </div>
-                <div class="mr-3 w-32">
-                    <a-select :placeholder="$t('声音角色')" size="small"
-                              v-model="formData.promptName">
-                        <a-option v-for="s in soundClonePromptStore.records">
-                            {{ s.name }}
+                <div class="mr-1">
+                    <a-radio-group v-model="formData.soundType">
+                        <a-radio value="soundTts">
+                            <i class="iconfont icon-sound-generate"></i>
+                            {{ $t('声音合成') }}
+                        </a-radio>
+                        <a-radio value="soundClone">
+                            <i class="iconfont icon-sound-clone"></i>
+                            {{ $t('声音克隆') }}
+                        </a-radio>
+                    </a-radio-group>
+                </div>
+                <div class="mr-1" v-if="formData.soundType==='soundTts'">
+                    <a-tooltip :content="$t('声音合成')">
+                        <i class="iconfont icon-sound-generate"></i>
+                    </a-tooltip>
+                </div>
+                <div class="mr-3 w-56 flex-shrink-0" v-if="formData.soundType==='soundTts'">
+                    <a-select v-model="formData.soundTtsId">
+                        <a-option :value="0">{{ $t('请选择') }}</a-option>
+                        <a-option v-for="record in soundTtsRecords" :key="record.id" :value="record.id">
+                            <div>
+                                #{{ record.id }} {{ record.text }}
+                            </div>
                         </a-option>
                     </a-select>
                 </div>
-                <div>
-                    <a-tooltip :content="$t('音速')">
-                        <i class="iconfont icon-speed"></i>
+                <div class="mr-1" v-if="formData.soundType==='soundClone'">
+                    <a-tooltip :content="$t('声音克隆')">
+                        <i class="iconfont icon-sound-clone"></i>
                     </a-tooltip>
                 </div>
-                <div class="mr-4 w-48 flex-shrink-0">
-                    <a-slider v-model="formData.speed" :marks="{'0.5':t('慢'),'1':t('正常'),'2':t('快')}"
-                              show-tooltip :min="0.5" :max="2" :step="0.1"/>
-                </div>
-                <div class="mr-2">
-                    <a-popover position="bottom">
-                        <i class="iconfont icon-seed"></i>
-                        <template #content>
-                            <div class="text-sm">
-                                <div class="font-bold mb-2">{{ $t('随机推理种子') }}</div>
-                                <div class="w-32">{{ $t('相同的种子可以确保每次生成结果数据一致') }}</div>
+                <div class="mr-3 w-56 flex-shrink-0" v-if="formData.soundType==='soundClone'">
+                    <a-select v-model="formData.soundCloneId">
+                        <a-option :value="0">{{ $t('请选择') }}</a-option>
+                        <a-option v-for="record in soundCloneRecords" :key="record.id" :value="record.id">
+                            <div>
+                                #{{ record.id }} {{ record.text }}
                             </div>
-                        </template>
-                    </a-popover>
+                        </a-option>
+                    </a-select>
                 </div>
-                <div class="mr-1 w-20 flex-shrink-0">
-                    <a-input v-model="formData.seed" class="pb-seed-input" size="small"/>
-                </div>
-                <div class="mr-4">
-                    <a-tooltip :content="$t('随机生成')">
-                        <a class="inline-block" href="javascript:;"
-                           @click="doRandomSeed">
-                            <icon-refresh/>
-                        </a>
-                    </a-tooltip>
-                </div>
-                <div>
-                    <a-popover position="bottom">
-                        <a-checkbox v-model="formData.crossLingual">
-                            {{ $t('跨语种') }}
-                        </a-checkbox>
-                        <template #content>
-                            <div class="text-sm">
-                                <div class="font-bold mb-2">{{ $t('跨语种') }}</div>
-                                <div class="w-32">
-                                    {{ $t('部分模型在跨语种克隆时需要特殊处理，因此需要标记是否为跨语种克隆') }}
-                                </div>
-                            </div>
-                        </template>
-                    </a-popover>
-                </div>
-            </div>
-            <div class="flex items-center">
             </div>
         </div>
-        <div class="pt-4">
-            <a-textarea v-model="formData.text" :placeholder="$t('输入语音内容开始克隆')"></a-textarea>
+        <div class="flex items-center">
+            <div class="flex-grow flex items-center h-12">
+                <div class="mr-1">
+                    <a-tooltip :content="$t('视频')">
+                        <i class="iconfont icon-video-template"></i>
+                        {{ $t('视频') }}
+                    </a-tooltip>
+                </div>
+                <div class="mr-3 w-56 flex-shrink-0">
+                    <a-select v-model="formData.videoTemplateId">
+                        <a-option :value="0">{{ $t('请选择') }}</a-option>
+                        <a-option v-for="record in videoTemplateRecords" :key="record.id" :value="record.id">
+                            <div>
+                                {{ record.name }}
+                            </div>
+                        </a-option>
+                    </a-select>
+                </div>
+            </div>
         </div>
         <div class="pt-2">
             <a-button type="primary" @click="doSubmit">
-                {{ $t('开始克隆') }}
+                {{ $t('开始生成视频') }}
             </a-button>
         </div>
     </div>

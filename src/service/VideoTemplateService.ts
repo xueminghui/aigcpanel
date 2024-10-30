@@ -1,3 +1,5 @@
+import {VideoGenRecord} from "./VideoGenService";
+
 export type VideoTemplateRecord = {
     id?: number;
     name: string;
@@ -39,17 +41,22 @@ export const VideoTemplateService = {
     },
     async insert(record: VideoTemplateRecord) {
         return await window.$mapi.db.insert(`INSERT INTO ${this.tableName()} (name, video)
-                                       VALUES (?, ?)`, [record.name, record.video])
+                                             VALUES (?, ?)`, [record.name, record.video])
     },
-    async delete(id: number) {
+    async delete(record: VideoTemplateRecord) {
+        if (record.video) {
+            await window.$mapi.file.deletes(record.video, {
+                isFullPath: true
+            })
+        }
         await window.$mapi.db.delete(`DELETE
-                                       FROM ${this.tableName()}
-                                       WHERE id = ?`, [id])
+                                      FROM ${this.tableName()}
+                                      WHERE id = ?`, [record.id])
     },
     async update(record: VideoTemplateRecord) {
         await window.$mapi.db.update(`UPDATE ${this.tableName()}
-                                       SET name  = ?,
-                                           video = ?
-                                       WHERE id = ?`, [record.name, record.video, record.id])
+                                      SET name  = ?,
+                                          video = ?
+                                      WHERE id = ?`, [record.name, record.video, record.id])
     }
 }

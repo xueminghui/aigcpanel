@@ -38,11 +38,7 @@ const columns = [
 
 const doDelete = async (record: VideoTemplateRecord) => {
     await Dialog.confirm(t('确认删除？'))
-    const videoPath = record.video
-    await window.$mapi.file.deletes(videoPath, {
-        isFullPath: true
-    })
-    await VideoTemplateService.delete(record.id as number)
+    await VideoTemplateService.delete(record)
     await doRefresh()
 }
 

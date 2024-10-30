@@ -63,6 +63,14 @@ defineExpose({
                         {{ props.record.title }}
                     </div>
                 </div>
+                <div class="flex mb-4" v-if="record.type===EnumServerType.LOCAL_DIR">
+                    <div class="w-20 flex-shrink-0">{{ $t('目录') }}</div>
+                    <div>
+                        <div class="rounded py-1 px-2 text-sm bg-gray-100">
+                            {{ props.record.localPath }}
+                        </div>
+                    </div>
+                </div>
                 <div class="flex mb-4">
                     <div class="w-20">{{ $t('版本') }}</div>
                     <div>

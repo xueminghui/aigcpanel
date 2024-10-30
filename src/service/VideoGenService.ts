@@ -9,12 +9,13 @@ export type VideoGenRecord = {
     serverName: string;
     serverTitle: string;
     serverVersion: string;
-    promptName: string;
-    promptWav: string;
-    promptText: string;
-    text: string;
-    speed: number;
-    seed: number;
+
+    videoTemplateId: number;
+    videoTemplateName: string;
+    soundType: string;
+    soundTtsId: number;
+    soundCloneId: number;
+
     param?: any;
 
     status?: 'queue' | 'running' | 'success' | 'fail';
@@ -23,7 +24,7 @@ export type VideoGenRecord = {
     jobResult?: any;
     startTime?: number,
     endTime?: number | undefined,
-    resultWav?: string;
+    resultMp4?: string;
 
     runtime?: VideoGenRuntime,
 }
@@ -34,8 +35,8 @@ export const VideoGenService = {
     tableName() {
         return 'data_video_gen'
     },
-    async resultWavPath(record: VideoGenRecord) {
-        return await window.$mapi.file.fullPath(`soundClone/${record.id}.wav`)
+    async resultMp4Path(record: VideoGenRecord) {
+        return await window.$mapi.file.fullPath(`videoGen/${record.id}.mp4`)
     },
     decodeRecord(record: VideoGenRecord): VideoGenRecord | null {
         if (!record) {
@@ -87,8 +88,8 @@ export const VideoGenService = {
         record.startTime = TimeUtil.timestampMS()
         const fields = [
             'serverName', 'serverTitle', 'serverVersion',
-            'promptName', 'promptWav', 'promptText',
-            'text', 'speed', 'seed', 'param',
+            'videoTemplateId', 'videoTemplateName', 'soundType', 'soundTtsId', 'soundCloneId',
+            'param',
             'status', 'statusMsg', 'startTime', 'endTime',
         ]
         record = this.encodeRecord(record)
@@ -107,20 +108,20 @@ export const VideoGenService = {
                                               SET ${set}
                                               WHERE id = ?`, [...values, id])
     },
-    async saveResultWav(record: VideoGenRecord, resultWav: string) {
-        const resultWavAbs = window.$mapi.file.absolutePath(resultWav)
-        const resultWavNew = await VideoGenService.resultWavPath(record)
-        const resultWavNewAbs = window.$mapi.file.absolutePath(resultWavNew)
-        // console.log('CloneService.saveResultWav', {resultWav, resultWavAbs, resultWavNew, resultWavNewAbs})
-        await window.$mapi.file.rename(resultWavAbs, resultWavNewAbs, {
+    async saveResultMp4(record: VideoGenRecord, resultMp4: string) {
+        const resultMp4Abs = window.$mapi.file.absolutePath(resultMp4)
+        const resultMp4New = await VideoGenService.resultMp4Path(record)
+        const resultMp4NewAbs = window.$mapi.file.absolutePath(resultMp4New)
+        // console.log('CloneService.saveResultWav', {resultMp4, resultMp4Abs, resultMp4New, resultMp4NewAbs})
+        await window.$mapi.file.rename(resultMp4Abs, resultMp4NewAbs, {
             overwrite: true
         })
-        return resultWavNew
+        return resultMp4New
     },
     async delete(record: VideoGenRecord) {
-        if (record.resultWav) {
-            const resultWavAbs = window.$mapi.file.absolutePath(record.resultWav)
-            await window.$mapi.file.deletes(resultWavAbs)
+        if (record.resultMp4) {
+            const resultMp4Abs = window.$mapi.file.absolutePath(record.resultMp4)
+            await window.$mapi.file.deletes(resultMp4Abs)
         }
         await window.$mapi.db.delete(`DELETE
                                       FROM ${this.tableName()}
