@@ -2,6 +2,7 @@
 
 import VideoTemplateDialog from "../../components/Video/VideoTemplateDialog.vue";
 import {ref} from "vue";
+import VideoPlayer from "../../components/common/VideoPlayer.vue";
 
 const videoTemplateDialog = ref<InstanceType<typeof VideoTemplateDialog>>(null)
 </script>
@@ -31,6 +32,7 @@ const videoTemplateDialog = ref<InstanceType<typeof VideoTemplateDialog>>(null)
             </div>
         </div>
         <div>
+            <VideoPlayer url="xxxxxx" height="400px"/>
         </div>
     </div>
     <VideoTemplateDialog ref="videoTemplateDialog"/>

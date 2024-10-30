@@ -1,32 +1,33 @@
 <script setup lang="ts">
 import {ref} from "vue";
-import {useVideoTemplateStore} from "../../store/modules/videoTemplate";
-import AudioPlayer from "../common/AudioPlayer.vue";
-import {AudioUtil} from "../../lib/audio";
 import {Dialog} from "../../lib/dialog";
-import {StringUtil} from "../../lib/util";
 import {t} from "../../lang";
-import WebFileSelectButton from "../common/WebFileSelectButton.vue";
+import VideoPlayer from "../common/VideoPlayer.vue";
+import {VideoTemplateRecord, VideoTemplateService} from "../../service/VideoTemplateService";
+import {StringUtil} from "../../lib/util";
 
 const visible = ref(false)
-const audioPlayer = ref<InstanceType<typeof AudioPlayer>>(null)
-const videoTemplateStore = useVideoTemplateStore()
+const videoPlayer = ref<InstanceType<typeof VideoPlayer> | null>(null)
 
 const formData = ref({
     name: '',
-    promptWav: '',
-    promptText: '',
+    video: '',
 })
 
 const add = () => {
     formData.value.name = ''
-    formData.value.promptWav = ''
-    formData.value.promptText = ''
+    formData.value.video = ''
     visible.value = true
 }
 
-const onSelectFile = async (file) => {
-    await audioPlayer.value.setRecordFromFile(file)
+const doSelectFile = async () => {
+    const path = await window.$mapi.file.openFile({
+        accept: 'video/*'
+    })
+    if (path) {
+        formData.value.video = path
+        // videoPlayer.value?.loadVideo(path)
+    }
 }
 
 const doSave = async () => {
@@ -34,30 +35,25 @@ const doSave = async () => {
         Dialog.tipError(t('请输入名称'))
         return
     }
-    const audioBuffer = audioPlayer.value.getAudioBuffer()
-    if (!audioBuffer) {
-        Dialog.tipError(t('请录制声音'))
+    if (!formData.value.video) {
+        Dialog.tipError(t('请选择视频'))
         return
     }
-    if (!formData.value.promptText) {
-        Dialog.tipError(t('请输入参考文字'))
-        return
-    }
-    const exists = await videoTemplateStore.getByName(formData.value.name)
+    const exists = await VideoTemplateService.getByName(formData.value.name)
     if (exists) {
         Dialog.tipError(t('名称重复'))
         return
     }
-    const wav = AudioUtil.audioBufferToWav(audioBuffer)
-    formData.value.promptWav = `videoTemplate/${StringUtil.random()}.wav`
-    await window.$mapi.file.writeBuffer(formData.value.promptWav, wav)
-    formData.value.promptWav = await window.$mapi.file.fullPath(formData.value.promptWav)
-    await videoTemplateStore.add({
-        name: formData.value.name,
-        promptWav: formData.value.promptWav,
-        promptText: formData.value.promptText,
+    const videoPathFull = await window.$mapi.file.fullPath(`videoTemplate/${StringUtil.random()}.mp4`)
+    await window.$mapi.file.copy(formData.value.video, videoPathFull, {
+        isFullPath: true
     })
+    await VideoTemplateService.insert({
+        name: formData.value.name,
+        video: videoPathFull,
+    } as VideoTemplateRecord)
     visible.value = false
+    emit('update')
 }
 
 defineExpose({
@@ -89,19 +85,18 @@ const emit = defineEmits({
                 </a-form-item>
                 <a-form-item :label="$t('视频')" required>
                     <div class="w-full">
-                        <div class="mb-3">
-                            <AudioPlayer ref="audioPlayer" show-wave trim-enable record-enable/>
+                        <div class="mb-3" v-if="formData.video">
+                            <div class="w-80 h-48">
+                                <VideoPlayer ref="videoPlayer" :url="`file://${formData.video}`"/>
+                            </div>
                         </div>
                         <div class="mb-3">
-                            <WebFileSelectButton @select-file="onSelectFile"
-                                                 accept="video/mp4">
-                                <a-button>
-                                    <template #icon>
-                                        <icon-upload/>
-                                    </template>
-                                    {{ $t('选择视频文件') }}
-                                </a-button>
-                            </WebFileSelectButton>
+                            <a-button @click="doSelectFile">
+                                <template #icon>
+                                    <icon-upload/>
+                                </template>
+                                {{ $t('选择视频文件') }}
+                            </a-button>
                         </div>
                     </div>
                 </a-form-item>

@@ -1,17 +1,22 @@
 <script setup lang="ts">
 import {ref} from "vue";
-import {useVideoTemplateStore, VideoTemplateRecord} from "../../store/modules/videoTemplate";
 import VideoTemplateEditDialog from "./VideoTemplateEditDialog.vue";
 import {Dialog} from "../../lib/dialog";
 import AudioPlayer from "../common/AudioPlayer.vue";
 import {t} from "../../lang";
+import {VideoTemplateRecord, VideoTemplateService} from "../../service/VideoTemplateService";
 
 const visible = ref(false)
-const videoTemplateStore = useVideoTemplateStore()
 const videoTemplateEditDialog = ref<InstanceType<typeof VideoTemplateEditDialog>>(null)
+const records = ref<VideoTemplateRecord[]>([])
 
-const show = () => {
+const show = async () => {
     visible.value = true
+    await doRefresh()
+}
+
+const doRefresh = async () => {
+    records.value = await VideoTemplateService.list()
 }
 
 const columns = [
@@ -33,7 +38,7 @@ const columns = [
 
 const doDelete = async (record: VideoTemplateRecord) => {
     await Dialog.confirm(t('确认删除？'))
-    await videoTemplateStore.delete(record.name)
+    await VideoTemplateService.delete(record.id as number)
 }
 
 defineExpose({
@@ -62,9 +67,9 @@ defineExpose({
                 <a-table :scroll="{maxHeight:'60vh'}"
                          :columns="columns"
                          :pagination="false"
-                         :data="videoTemplateStore.records">
-                    <template #promptPlayer="{ record }">
-                        <AudioPlayer show-wave :url="'file://'+record.promptWav"/>
+                         :data="records">
+                    <template #video="{ record }">
+                        <AudioPlayer show-wave :url="'file://'+record.video"/>
                     </template>
                     <template #operate="{ record }">
                         <a-button @click="doDelete(record)">

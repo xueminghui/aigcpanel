@@ -53,8 +53,34 @@ const versions = [
                     endTime INTEGER,
                     resultWav TEXT
             )`);
+            await db.execute(`CREATE TABLE IF NOT EXISTS data_video_template (
+                    id INTEGER PRIMARY KEY,
+
+                    name TEXT,
+                    video TEXT
+            )`);
+            await db.execute(`CREATE TABLE IF NOT EXISTS data_video_gen (
+                    id INTEGER PRIMARY KEY,
+
+                    serverName TEXT,
+                    serverTitle TEXT,
+                    serverVersion TEXT,
+                    videoTemplateId INTEGER,
+                    videoTemplate TEXT,
+                    soundType TEXT,
+                    soundId INTEGER,
+                    param TEXT,
+
+                    status TEXT,
+                    statusMsg TEXT,
+                    jobId TEXT,
+                    jobResult TEXT,
+                    startTime INTEGER,
+                    endTime INTEGER,
+                    resultMp4 TEXT
+            )`);
         }
-    }
+    },
 ]
 
 export default {
