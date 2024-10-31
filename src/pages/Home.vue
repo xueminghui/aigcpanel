@@ -19,7 +19,7 @@ onBeforeMount(() => {
 <template>
     <div class="page-narrow-container p-8">
         <div class="text-3xl font-bold mb-4">
-            欢迎使用 {{AppConfig.name}} ！
+            欢迎使用 {{ AppConfig.name }} ！
         </div>
         <div>
 
