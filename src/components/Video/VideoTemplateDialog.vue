@@ -21,6 +21,7 @@ const doRefresh = async () => {
 }
 
 const onUpdate = async () => {
+    await doRefresh()
     emit('update')
 }
 
