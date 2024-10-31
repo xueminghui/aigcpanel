@@ -66,8 +66,8 @@ export const serverStore = defineStore("server", {
                 }
                 localRecords.push({
                     key: this.generateServerKey({
-                        name: json.name || dir.name,
-                        version: json.version || '1.0.0',
+                        name: json.name,
+                        version: json.version,
                     } as any),
                     name: json.name || dir.name,
                     title: json.title || dir.name,
@@ -99,7 +99,7 @@ export const serverStore = defineStore("server", {
             }
         },
         findRecord(server: ServerRecord) {
-            return this.records.find((record) => record.key = server.key)
+            return this.records.find((record) => record.key === server.key)
         },
         async start(server: ServerRecord) {
             const record = this.findRecord(server)
