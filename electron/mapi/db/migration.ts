@@ -69,7 +69,9 @@ const versions = [
                     videoTemplateName TEXT,
                     soundType TEXT,
                     soundTtsId INTEGER,
+                    soundTtsText TEXT,
                     soundCloneId INTEGER,
+                    soundCloneText TEXT,
 
                     param TEXT,
 

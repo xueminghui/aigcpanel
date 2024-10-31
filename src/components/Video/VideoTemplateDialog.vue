@@ -17,6 +17,11 @@ const show = async () => {
 
 const doRefresh = async () => {
     records.value = await VideoTemplateService.list()
+    emit('update')
+}
+
+const onUpdate = async () => {
+    emit('update')
 }
 
 const columns = [
@@ -40,7 +45,12 @@ const doDelete = async (record: VideoTemplateRecord) => {
     await Dialog.confirm(t('确认删除？'))
     await VideoTemplateService.delete(record)
     await doRefresh()
+    emit('update')
 }
+
+const emit = defineEmits({
+    update: () => true
+})
 
 defineExpose({
     show
@@ -70,7 +80,7 @@ defineExpose({
                          :pagination="false"
                          :data="records">
                     <template #video="{ record }">
-                        <div class="w-64 h-44">
+                        <div class="w-48 h-48">
                             <VideoPlayer :url="'file://'+record.video"/>
                         </div>
                     </template>
@@ -85,5 +95,5 @@ defineExpose({
             </div>
         </div>
     </a-modal>
-    <VideoTemplateEditDialog @update="doRefresh" ref="videoTemplateEditDialog"/>
+    <VideoTemplateEditDialog @update="onUpdate" ref="videoTemplateEditDialog"/>
 </template>

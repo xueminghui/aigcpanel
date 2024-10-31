@@ -12,6 +12,7 @@ import VideoPlayer from "../../components/common/VideoPlayer.vue";
 import VideoDuration from "../../components/Video/VideoDuration.vue";
 
 const videoTemplateDialog = ref<InstanceType<typeof VideoTemplateDialog> | null>(null)
+const videoGenCreate = ref<InstanceType<typeof VideoGenCreate> | null>(null)
 
 const records = ref<VideoGenRecord[]>([])
 const taskStore = useTaskStore()
@@ -59,7 +60,7 @@ onBeforeUnmount(() => {
             </div>
         </div>
         <div>
-            <VideoGenCreate @submitted="doRefresh"/>
+            <VideoGenCreate ref="videoGenCreate" @submitted="doRefresh"/>
 
             <div>
                 <div v-for="r in records" :key="r.id">
@@ -82,13 +83,44 @@ onBeforeUnmount(() => {
                                 <TaskBizStatus :status="r.status" :status-msg="r.statusMsg"/>
                             </div>
                         </div>
-                        <div class="pt-4">
-                            <pre>{{ r }}</pre>
+                        <div class="pt-4 flex">
+                            <div class="flex-grow">
+                                <div class="flex items-center mb-3">
+                                    <div class="bg-gray-100 px-3 py-1 leading-6 rounded mr-2">
+                                        <i class="iconfont icon-video-template"></i>
+                                        {{ $t('视频模板') }}
+                                    </div>
+                                    <div>
+                                        {{ r.videoTemplateName }}
+                                    </div>
+                                </div>
+                                <div v-if="r.soundType==='soundTts'" class="flex items-center">
+                                    <div class="bg-gray-100 px-3 py-1 leading-6 rounded mr-2">
+                                        <i class="iconfont icon-video-template"></i>
+                                        {{ $t('声音合成') }}
+                                    </div>
+                                    <div>
+                                        {{ r.soundTtsText }}
+                                    </div>
+                                </div>
+                                <div v-if="r.soundType==='soundClone'" class="flex items-center">
+                                    <div class="bg-gray-100 px-3 py-1 leading-6 rounded mr-2">
+                                        <i class="iconfont icon-video-template"></i>
+                                        {{ $t('声音克隆') }}
+                                    </div>
+                                    <div>
+                                        {{ r.soundCloneText }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="w-64 flex-shrink-0">
+                                <div class="w-64 h-64" v-if="r.resultMp4">
+                                    <VideoPlayer :url="'file://'+r.resultMp4"/>
+                                </div>
+                            </div>
                         </div>
-                        <div class="pt-4" v-if="r.resultMp4">
-                            <VideoPlayer
-                                show-wave
-                                :url="'file://'+r.resultMp4"/>
+                        <div v-if="0">
+                            <pre>{{ r }}</pre>
                         </div>
                         <div class="pt-4">
                             <VideoGenActionDownload :record="r"/>
@@ -99,7 +131,7 @@ onBeforeUnmount(() => {
             </div>
         </div>
     </div>
-    <VideoTemplateDialog ref="videoTemplateDialog"/>
+    <VideoTemplateDialog ref="videoTemplateDialog" @update="videoGenCreate?.refresh('videoTemplate')"/>
 </template>
 
 <style scoped>

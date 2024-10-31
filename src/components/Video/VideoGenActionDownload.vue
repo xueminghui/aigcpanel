@@ -15,8 +15,8 @@ const doDownload = async () => {
         defaultPath: title
     })
     if (filePath) {
-        if (!filePath.endsWith('.wav')) {
-            filePath = filePath + '.wav'
+        if (!filePath.endsWith('.mp4')) {
+            filePath = filePath + '.mp4'
         }
         // console.log('filePath', record.resultMp4, filePath)
         try {

@@ -72,6 +72,7 @@ export const SoundTtsService = {
                                                                         WHERE status = 'running'
                                                                            OR status = 'queue'
                                                                         ORDER BY id DESC`)
+        // console.log('SoundTtsService.restoreForTask', records.length)
         for (let record of records) {
             let status = record.status === 'running' ? 'querying' : 'queue'
             await taskStore.dispatch('SoundTts', record.id as any, {}, {
@@ -102,8 +103,8 @@ export const SoundTtsService = {
         const values = fields.map(f => record[f])
         const set = fields.map(f => `${f} = ?`).join(',')
         return await window.$mapi.db.update(`UPDATE ${this.tableName()}
-                                              SET ${set}
-                                              WHERE id = ?`, [...values, id])
+                                             SET ${set}
+                                             WHERE id = ?`, [...values, id])
     },
     async saveResultWav(record: SoundTtsRecord, resultWav: string) {
         const resultWavAbs = window.$mapi.file.absolutePath(resultWav)

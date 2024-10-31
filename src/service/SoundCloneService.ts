@@ -74,6 +74,7 @@ export const SoundCloneService = {
                                                                           WHERE status = 'running'
                                                                              OR status = 'queue'
                                                                           ORDER BY id DESC`)
+        // console.log('SoundCloneService.restoreForTask', records.length)
         for (let record of records) {
             let status = record.status === 'running' ? 'querying' : 'queue'
             await taskStore.dispatch('SoundClone', record.id as any, {}, {

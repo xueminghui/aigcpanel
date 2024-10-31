@@ -14,7 +14,9 @@ export type VideoGenRecord = {
     videoTemplateName: string;
     soundType: string;
     soundTtsId: number;
+    soundTtsText: string;
     soundCloneId: number;
+    soundCloneText: string;
 
     param?: any;
 
@@ -75,6 +77,7 @@ export const VideoGenService = {
                                                                         WHERE status = 'running'
                                                                            OR status = 'queue'
                                                                         ORDER BY id DESC`)
+        // console.log('VideoGenService.restoreForTask', records.length)
         for (let record of records) {
             let status = record.status === 'running' ? 'querying' : 'queue'
             await taskStore.dispatch('VideoGen', record.id as any, {}, {
@@ -88,7 +91,8 @@ export const VideoGenService = {
         record.startTime = TimeUtil.timestampMS()
         const fields = [
             'serverName', 'serverTitle', 'serverVersion',
-            'videoTemplateId', 'videoTemplateName', 'soundType', 'soundTtsId', 'soundCloneId',
+            'videoTemplateId', 'videoTemplateName',
+            'soundType', 'soundTtsId', 'soundTtsText', 'soundCloneId', 'soundCloneText',
             'param',
             'status', 'statusMsg', 'startTime', 'endTime',
         ]

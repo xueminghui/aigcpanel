@@ -42,7 +42,7 @@ export const SoundClone: TaskBiz = {
             speed: parseFloat(record.speed as any),
             seed: parseInt(record.seed as any),
         })
-        console.log('SoundClone.runFunc.res', res)
+        // console.log('SoundClone.runFunc.res', res)
         if (res.code) {
             if (res.msg) {
                 throw new Error(res.msg)
@@ -68,37 +68,13 @@ export const SoundClone: TaskBiz = {
         throw new Error('unknown res.data.type')
     },
     queryFunc: async (bizId, bizParam) => {
-        // // console.log('SoundClone.queryFunc', {bizId, bizParam})
-        // const {record, server} = await prepareData(bizId, bizParam)
-        // // console.log('SoundClone.queryFunc.prepareData', {bizId, bizParam, record, server})
-        // const res = await serverStore.apiRequest(server, '/query', {
-        //     jobId: record.jobId,
-        // })
-        // await SoundCloneService.update(bizId as any, {
-        //     jobResult: res,
-        // })
-        // // console.log('SoundClone.queryFunc.res', res)
-        // if (res.code) {
-        //     if (res.msg) {
-        //         throw new Error(res.msg)
-        //     }
-        //     throw new Error('apiRequest query fail')
-        // }
-        // switch (res.data.status) {
-        //     case 'running':
-        //         return 'running'
-        //     case 'success':
-        //         return 'success'
-        //     case 'fail':
-        //     default:
-        //         return 'fail'
-        // }
-        return 'fail'
+        // console.log('SoundTts.queryFunc', {bizId, bizParam})
+        throw new Error('RequestError')
     },
     successFunc: async (bizId, bizParam) => {
         // console.log('SoundClone.successFunc', {bizId, bizParam})
         const {record, server} = await prepareData(bizId, bizParam)
-        console.log('SoundClone.successFunc.prepareData', {bizId, bizParam, record, server})
+        // console.log('SoundClone.successFunc.prepareData', {bizId, bizParam, record, server})
         const resultWav = await SoundCloneService.saveResultWav(record, record.jobResult.data.data.filePath)
         // console.log('SoundClone.successFunc.resultWav', resultWav)
         await SoundCloneService.update(bizId as any, {

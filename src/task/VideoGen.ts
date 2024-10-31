@@ -68,46 +68,23 @@ export const VideoGen: TaskBiz = {
         throw new Error('unknown res.data.type')
     },
     queryFunc: async (bizId, bizParam) => {
-        // // console.log('VideoGen.queryFunc', {bizId, bizParam})
-        // const {record, server} = await prepareData(bizId, bizParam)
-        // // console.log('VideoGen.queryFunc.prepareData', {bizId, bizParam, record, server})
-        // const res = await serverStore.apiRequest(server, '/query', {
-        //     jobId: record.jobId,
-        // })
-        // await VideoGenService.update(bizId as any, {
-        //     jobResult: res,
-        // })
-        // // console.log('VideoGen.queryFunc.res', res)
-        // if (res.code) {
-        //     if (res.msg) {
-        //         throw new Error(res.msg)
-        //     }
-        //     throw new Error('apiRequest query fail')
-        // }
-        // switch (res.data.status) {
-        //     case 'running':
-        //         return 'running'
-        //     case 'success':
-        //         return 'success'
-        //     case 'fail':
-        //     default:
-        //         return 'fail'
-        // }
-        return 'fail'
+        // console.log('SoundTts.queryFunc', {bizId, bizParam})
+        throw new Error('RequestError')
     },
     successFunc: async (bizId, bizParam) => {
-        // console.log('VideoGen.successFunc', {bizId, bizParam})
+        console.log('VideoGen.successFunc', {bizId, bizParam})
         const {record, server} = await prepareData(bizId, bizParam)
-        // const resultMp4 = await VideoGenService.saveResultWav(record, record.jobResult.data.data.filePath)
+        console.log('VideoGen.successFunc.record', {record, server})
+        const resultMp4 = await VideoGenService.saveResultMp4(record, record.jobResult.data.data.filePath)
         // console.log('VideoGen.successFunc.resultMp4', resultMp4)
         await VideoGenService.update(bizId as any, {
             status: 'success',
             endTime: Date.now(),
-            // resultMp4: resultMp4
+            resultMp4: resultMp4
         })
     },
     failFunc: async (bizId, msg, bizParam) => {
-        // console.log('VideoGen.failFunc', {bizId, bizParam, msg})
+        console.log('VideoGen.failFunc', {bizId, bizParam, msg})
         // const {record, server} = await prepareData(bizId, bizParam)
         await VideoGenService.update(bizId as any, {
             status: 'fail',

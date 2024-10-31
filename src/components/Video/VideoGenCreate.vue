@@ -59,13 +59,25 @@ const doSubmit = async () => {
         Dialog.tipError(t('请选择模型'))
         return
     }
+    let soundTtsRecord: SoundTtsRecord | null = null
+    let soundCloneRecord: SoundCloneRecord | null = null
     if (formData.value.soundType === 'soundTts') {
         if (!formData.value.soundTtsId) {
             Dialog.tipError(t('请选择声音'))
             return
         }
+        soundTtsRecord = await SoundTtsService.get(formData.value.soundTtsId)
+        if (!soundTtsRecord) {
+            Dialog.tipError(t('请选择声音'))
+            return
+        }
     } else if (formData.value.soundType === 'soundClone') {
         if (!formData.value.soundCloneId) {
+            Dialog.tipError(t('请选择声音'))
+            return
+        }
+        soundCloneRecord = await SoundCloneService.get(formData.value.soundCloneId)
+        if (!soundCloneRecord) {
             Dialog.tipError(t('请选择声音'))
             return
         }
@@ -86,7 +98,7 @@ const doSubmit = async () => {
     }
     if (server.status !== EnumServerStatus.RUNNING) {
         Dialog.tipError(t('模型未启动'))
-        return
+        // return
     }
     const record: VideoGenRecord = {
         serverName: server.name,
@@ -96,7 +108,9 @@ const doSubmit = async () => {
         videoTemplateName: videoTemplate.name,
         soundType: formData.value.soundType,
         soundTtsId: formData.value.soundTtsId as number,
+        soundTtsText: soundTtsRecord ? soundTtsRecord.text : '',
         soundCloneId: formData.value.soundCloneId,
+        soundCloneText: soundCloneRecord ? soundCloneRecord.text : '',
         param: {}
     }
     const id = await VideoGenService.submit(record)
@@ -104,8 +118,18 @@ const doSubmit = async () => {
     emit('submitted')
 }
 
+const refresh = async (type: 'videoTemplate') => {
+    if (type === 'videoTemplate') {
+        videoTemplateRecords.value = await VideoTemplateService.list()
+    }
+}
+
 const emit = defineEmits({
     submitted: () => true
+})
+
+defineExpose({
+    refresh
 })
 
 </script>

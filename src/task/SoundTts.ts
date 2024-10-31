@@ -68,32 +68,8 @@ export const SoundTts: TaskBiz = {
         throw new Error('unknown res.data.type')
     },
     queryFunc: async (bizId, bizParam) => {
-        // // console.log('SoundTts.queryFunc', {bizId, bizParam})
-        // const {record, server} = await prepareData(bizId, bizParam)
-        // // console.log('SoundTts.queryFunc.prepareData', {bizId, bizParam, record, server})
-        // const res = await serverStore.apiRequest(server, '/query', {
-        //     jobId: record.jobId,
-        // })
-        // await SoundTtsService.update(bizId as any, {
-        //     jobResult: res,
-        // })
-        // // console.log('SoundTts.queryFunc.res', res)
-        // if (res.code) {
-        //     if (res.msg) {
-        //         throw new Error(res.msg)
-        //     }
-        //     throw new Error('apiRequest query fail')
-        // }
-        // switch (res.data.status) {
-        //     case 'running':
-        //         return 'running'
-        //     case 'success':
-        //         return 'success'
-        //     case 'fail':
-        //     default:
-        //         return 'fail'
-        // }
-        return 'fail'
+        // console.log('SoundTts.queryFunc', {bizId, bizParam})
+        throw new Error('RequestError')
     },
     successFunc: async (bizId, bizParam) => {
         // console.log('SoundTts.successFunc', {bizId, bizParam})

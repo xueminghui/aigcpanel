@@ -17,7 +17,7 @@ const records = ref<SoundCloneRecord[]>([])
 const taskStore = useTaskStore()
 
 const taskChangeCallback = (bizId: string, type: TaskChangeType) => {
-    setTimeout(doRefresh, 1000)
+    doRefresh()
 }
 
 onMounted(async () => {
@@ -84,7 +84,7 @@ const doRefresh = async () => {
                                 <div v-if="r.param.CrossLingual"
                                      class="inline-block mr-4 bg-blue-100 rounded-lg px-2 leading-8 h-8">
                                     <i class="iconfont icon-global mr-1"></i>
-                                    <span class="">{{$t('跨语种')}}</span>
+                                    <span class="">{{ $t('跨语种') }}</span>
                                 </div>
                             </div>
                             <div class="ml-1">
