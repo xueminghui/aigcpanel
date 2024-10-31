@@ -1,7 +1,9 @@
 import {TaskBiz} from "../store/modules/task";
 import {useServerStore} from "../store/modules/server";
 import {VideoGenService} from "../service/VideoGenService";
-import {mapError} from "../lib/error";
+import {VideoTemplateService} from "../service/VideoTemplateService";
+import {SoundTtsService} from "../service/SoundTtsService";
+import {SoundCloneService} from "../service/SoundCloneService";
 
 const serverStore = useServerStore()
 
@@ -35,11 +37,24 @@ export const VideoGen: TaskBiz = {
         await VideoGenService.update(bizId as any, {
             status: 'running',
         })
+        const videoTemplateRecord = await VideoTemplateService.get(record.videoTemplateId)
+        if (!videoTemplateRecord) {
+            throw new Error('VideoTemplateEmpty')
+        }
+        let soundFile: string | null = null
+        if (record.soundType === 'soundTts') {
+            const soundTtsRecord = await SoundTtsService.get(record.soundTtsId)
+            soundFile = soundTtsRecord?.resultWav as string
+        } else if (record.soundType === 'soundClone') {
+            const soundCloneRecord = await SoundCloneService.get(record.soundCloneId)
+            soundFile = soundCloneRecord?.resultWav as string
+        }
+        if (!soundFile) {
+            throw new Error('SoundFileEmpty')
+        }
         const res = await window.$mapi.server.callFunction(serverInfo, 'videoGen', {
-            // text: record.text,
-            // speaker: record.speaker,
-            // speed: parseFloat(record.speed as any),
-            // seed: parseInt(record.seed as any),
+            videoFile: videoTemplateRecord?.video,
+            soundFile: soundFile
         })
         // console.log('VideoGen.runFunc.res', res)
         if (res.code) {
