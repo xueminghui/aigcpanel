@@ -85,21 +85,25 @@ onBeforeUnmount(() => {
                         </div>
                         <div class="pt-4 flex">
                             <div class="flex-grow">
-                                <div class="flex items-center mb-3">
-                                    <div class="bg-gray-100 px-3 py-1 leading-6 rounded mr-2">
-                                        <i class="iconfont icon-video-template"></i>
-                                        {{ $t('视频模板') }}
+                                <div class="flex mb-3">
+                                    <div class="mr-2 flex-shrink-0">
+                                        <div class="bg-gray-100 px-3 py-1 leading-6 rounded">
+                                            <i class="iconfont icon-video-template"></i>
+                                            {{ $t('视频模板') }}
+                                        </div>
                                     </div>
-                                    <div>
+                                    <div class="pt-1">
                                         {{ r.videoTemplateName }}
                                     </div>
                                 </div>
-                                <div v-if="r.soundType==='soundTts'" class="flex items-center">
-                                    <div class="bg-gray-100 px-3 py-1 leading-6 rounded mr-2">
-                                        <i class="iconfont icon-video-template"></i>
-                                        {{ $t('声音合成') }}
+                                <div v-if="r.soundType==='soundTts'" class="flex">
+                                    <div class="mr-2 flex-shrink-0">
+                                        <div class="bg-gray-100 px-3 py-1 leading-6 rounded">
+                                            <i class="iconfont icon-sound"></i>
+                                            {{ $t('声音合成') }}
+                                        </div>
                                     </div>
-                                    <div>
+                                    <div class="pt-1">
                                         {{ r.soundTtsText }}
                                     </div>
                                 </div>

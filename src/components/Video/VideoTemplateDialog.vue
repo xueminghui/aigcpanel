@@ -81,8 +81,10 @@ defineExpose({
                          :pagination="false"
                          :data="records">
                     <template #video="{ record }">
-                        <div class="w-48 h-48">
-                            <VideoPlayer :url="'file://'+record.video"/>
+                        <div class="p-2 shadow rounded-lg bg-gray-400 inline-block">
+                            <div class="w-48 h-48">
+                                <VideoPlayer :url="'file://'+record.video"/>
+                            </div>
                         </div>
                     </template>
                     <template #operate="{ record }">
