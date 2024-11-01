@@ -117,9 +117,11 @@ onBeforeUnmount(() => {
                                     </div>
                                 </div>
                             </div>
-                            <div class="w-64 flex-shrink-0">
-                                <div class="w-64 h-64" v-if="r.resultMp4">
-                                    <VideoPlayer :url="'file://'+r.resultMp4"/>
+                            <div class="flex-shrink-0 ml-8">
+                                <div class="p-2 rounded shadow bg-gray-300">
+                                    <div class="w-48 h-48" v-if="r.resultMp4">
+                                        <VideoPlayer :url="'file://'+r.resultMp4"/>
+                                    </div>
                                 </div>
                             </div>
                         </div>
