@@ -268,7 +268,7 @@ export const taskStore = defineStore("task", {
                 throw new Error('TaskBizNotFound')
             }
             param = Object.assign({
-                timeout: 60 * 10 * 1000,
+                timeout: 24 * 60 * 60 * 1000,
                 queryInterval: 1 * 1000,
                 status: 'queue',
                 runStart: 0,

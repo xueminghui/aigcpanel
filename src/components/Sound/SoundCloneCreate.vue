@@ -8,29 +8,28 @@ import {SoundCloneRecord, SoundCloneService} from "../../service/SoundCloneServi
 import {StorageUtil} from "../../lib/storage";
 import {useSoundClonePromptStore} from "../../store/modules/soundClonePrompt";
 import {t} from "../../lang";
-import ServerStatus from "../Server/ServerStatus.vue";
 import {EnumServerStatus} from "../../types/Server";
+import ParamForm from "../common/ParamForm.vue";
+import {mapError} from "../../lib/error";
 
+const paramForm = ref<InstanceType<typeof ParamForm> | null>(null)
 const soundClonePromptStore = useSoundClonePromptStore()
 const serverStore = useServerStore()
 
 const formData = ref({
     serverKey: '',
     promptName: '',
-    speed: 1.0,
     text: '',
-    seed: '0',
-    // 是否跨语种
-    crossLingual: false,
+    param: {}
 });
+const formDataParam = ref([])
 
 onMounted(() => {
     const old = StorageUtil.getObject('SoundCloneCreate.formData')
     formData.value.serverKey = old.serverKey || ''
     formData.value.promptName = old.promptName || ''
-    formData.value.speed = old.speed || 1.0
     formData.value.text = old.text || ''
-    formData.value.seed = old.seed || '0'
+    formData.value.param = old.param || {}
 })
 
 watch(() => formData.value, async (value) => {
@@ -39,12 +38,21 @@ watch(() => formData.value, async (value) => {
     deep: true
 })
 
-
-const doRandomSeed = () => {
-    formData.value.seed = Math.floor(Math.random() * 1000000) + ''
-}
+watch(() => formData.value.serverKey, async (value) => {
+    // console.log('formData.serverKey', value)
+    const server = await serverStore.getByKey(value)
+    if (server) {
+        const res = await window.$mapi.server.config(await serverStore.serverInfo(server))
+        if (res.code) {
+            Dialog.tipError(mapError(res.msg))
+            return
+        }
+        formDataParam.value = res.data.functions.soundClone.param || []
+    }
+})
 
 const doSubmit = async () => {
+    formData.value.param = paramForm.value.getValue()
     if (!formData.value.serverKey) {
         Dialog.tipError(t('请选择模型'))
         return
@@ -56,10 +64,6 @@ const doSubmit = async () => {
     const prompt = await soundClonePromptStore.getByName(formData.value.promptName)
     if (!prompt) {
         Dialog.tipError(t('声音角色不存在'))
-        return
-    }
-    if (formData.value.seed === '') {
-        Dialog.tipError(t('请输入随机种子'))
         return
     }
     if (!formData.value.text) {
@@ -83,11 +87,7 @@ const doSubmit = async () => {
         promptWav: prompt.promptWav,
         promptText: prompt.promptText,
         text: formData.value.text,
-        speed: formData.value.speed,
-        seed: parseInt(formData.value.seed),
-        param: {
-            CrossLingual: formData.value.crossLingual
-        }
+        param: formData.value.param,
     }
     const id = await SoundCloneService.submit(record)
     formData.value.text = ''
@@ -103,78 +103,31 @@ const emit = defineEmits({
 
 <template>
     <div class="rounded-xl shadow border p-4">
-        <div class="flex items-center">
-            <div class="flex-grow flex items-center h-12">
-                <div class="mr-1">
-                    <a-tooltip :content="$t('模型')">
-                        <i class="iconfont icon-server"></i>
-                    </a-tooltip>
-                </div>
-                <div class="mr-3 w-56 flex-shrink-0">
-                    <ServerSelector v-model="formData.serverKey" functionName="soundClone"/>
-                </div>
-                <div class="mr-1">
-                    <a-tooltip :content="$t('声音角色')">
-                        <i class="iconfont icon-sound-prompt"></i>
-                    </a-tooltip>
-                </div>
-                <div class="mr-3 w-32">
-                    <a-select :placeholder="$t('声音角色')" size="small"
-                              v-model="formData.promptName">
-                        <a-option v-for="s in soundClonePromptStore.records">
-                            {{ s.name }}
-                        </a-option>
-                    </a-select>
-                </div>
-                <div>
-                    <a-tooltip :content="$t('音速')">
-                        <i class="iconfont icon-speed"></i>
-                    </a-tooltip>
-                </div>
-                <div class="mr-4 w-48 flex-shrink-0">
-                    <a-slider v-model="formData.speed" :marks="{'0.5':t('慢'),'1':t('正常'),'2':t('快')}"
-                              show-tooltip :min="0.5" :max="2" :step="0.1"/>
-                </div>
-                <div class="mr-2">
-                    <a-popover position="bottom">
-                        <i class="iconfont icon-seed"></i>
-                        <template #content>
-                            <div class="text-sm">
-                                <div class="font-bold mb-2">{{ $t('随机推理种子') }}</div>
-                                <div class="w-32">{{ $t('相同的种子可以确保每次生成结果数据一致') }}</div>
-                            </div>
-                        </template>
-                    </a-popover>
-                </div>
-                <div class="mr-1 w-20 flex-shrink-0">
-                    <a-input v-model="formData.seed" class="pb-seed-input" size="small"/>
-                </div>
-                <div class="mr-4">
-                    <a-tooltip :content="$t('随机生成')">
-                        <a class="inline-block" href="javascript:;"
-                           @click="doRandomSeed">
-                            <icon-refresh/>
-                        </a>
-                    </a-tooltip>
-                </div>
-                <div>
-                    <a-popover position="bottom">
-                        <a-checkbox v-model="formData.crossLingual">
-                            {{ $t('跨语种') }}
-                        </a-checkbox>
-                        <template #content>
-                            <div class="text-sm">
-                                <div class="font-bold mb-2">{{ $t('跨语种') }}</div>
-                                <div class="w-32">
-                                    {{ $t('部分模型在跨语种克隆时需要特殊处理，因此需要标记是否为跨语种克隆') }}
-                                </div>
-                            </div>
-                        </template>
-                    </a-popover>
-                </div>
+        <div class="flex items-center h-12">
+            <div class="mr-1">
+                <a-tooltip :content="$t('模型')">
+                    <i class="iconfont icon-server"></i>
+                </a-tooltip>
             </div>
-            <div class="flex items-center">
+            <div class="mr-3 w-64 flex-shrink-0">
+                <ServerSelector v-model="formData.serverKey" functionName="soundClone"/>
             </div>
+            <div class="mr-1">
+                <a-tooltip :content="$t('声音角色')">
+                    <i class="iconfont icon-sound-prompt"></i>
+                </a-tooltip>
+            </div>
+            <div class="mr-3 w-48">
+                <a-select :placeholder="$t('声音角色')" size="small"
+                          v-model="formData.promptName">
+                    <a-option v-for="s in soundClonePromptStore.records">
+                        {{ s.name }}
+                    </a-option>
+                </a-select>
+            </div>
+        </div>
+        <div class="flex items-center min-h-12" v-if="formDataParam.length>0">
+            <ParamForm ref="paramForm" :param="formDataParam"/>
         </div>
         <div class="pt-4">
             <a-textarea v-model="formData.text" :placeholder="$t('输入语音内容开始克隆')"></a-textarea>
@@ -187,21 +140,3 @@ const emit = defineEmits({
     </div>
 </template>
 
-<style lang="less" scoped>
-:deep(.arco-slider) {
-    margin-bottom: 0 !important;
-
-    .arco-slider-mark {
-        font-size: 10px !important;
-    }
-}
-
-:deep(.pb-seed-input) {
-    padding-left: 0;
-    padding-right: 0;
-
-    .arco-input {
-        text-align: center;
-    }
-}
-</style>

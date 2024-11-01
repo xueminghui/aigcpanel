@@ -17,10 +17,7 @@ const versions = [
                     serverName TEXT,
                     serverTitle TEXT,
                     serverVersion TEXT,
-                    speaker TEXT,
                     text TEXT,
-                    speed TEXT,
-                    seed TEXT,
                     param TEXT,
 
                     status TEXT,
@@ -41,8 +38,6 @@ const versions = [
                     promptWav TEXT,
                     promptText TEXT,
                     text TEXT,
-                    speed TEXT,
-                    seed TEXT,
                     param TEXT,
 
                     status TEXT,

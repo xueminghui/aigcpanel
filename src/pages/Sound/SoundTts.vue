@@ -62,13 +62,15 @@ const doRefresh = async () => {
                                     {{ r.serverTitle }}
                                     v{{ r.serverVersion }}
                                 </div>
-                                <div class="inline-block mr-4 bg-blue-100 rounded-lg px-2 leading-8 h-8">
+                                <div v-if="r.param.speaker"
+                                     class="inline-block mr-4 bg-blue-100 rounded-lg px-2 leading-8 h-8">
                                     <i class="iconfont icon-speaker mr-1"></i>
-                                    {{ r.speaker }}
+                                    {{ r.param.speaker }}
                                 </div>
-                                <div class="inline-block mr-4 bg-blue-100 rounded-lg px-2 leading-8 h-8">
+                                <div v-if="r.param.speed"
+                                     class="inline-block mr-4 bg-blue-100 rounded-lg px-2 leading-8 h-8">
                                     <i class="iconfont icon-speed mr-1"></i>
-                                    <span class="">x{{ r.speed }}</span>
+                                    <span class="">x{{ r.param.speed }}</span>
                                 </div>
                             </div>
                             <div class="ml-1">

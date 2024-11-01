@@ -77,11 +77,12 @@ const doRefresh = async () => {
                                     <i class="iconfont icon-sound-prompt mr-1"></i>
                                     {{ r.promptName }}
                                 </div>
-                                <div class="inline-block mr-4 bg-blue-100 rounded-lg px-2 leading-8 h-8">
+                                <div v-if="r.param.speed"
+                                     class="inline-block mr-4 bg-blue-100 rounded-lg px-2 leading-8 h-8">
                                     <i class="iconfont icon-speed mr-1"></i>
-                                    <span class="">x{{ r.speed }}</span>
+                                    <span class="">x{{ r.param.speed }}</span>
                                 </div>
-                                <div v-if="r.param.CrossLingual"
+                                <div v-if="r.param.crossLingual"
                                      class="inline-block mr-4 bg-blue-100 rounded-lg px-2 leading-8 h-8">
                                     <i class="iconfont icon-global mr-1"></i>
                                     <span class="">{{ $t('跨语种') }}</span>

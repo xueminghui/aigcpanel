@@ -9,11 +9,8 @@ export type SoundTtsRecord = {
     serverName: string;
     serverTitle: string;
     serverVersion: string;
-    speaker: string;
     text: string;
-    speed: number;
-    seed: number;
-    param?: any;
+    param: any;
 
     status?: 'queue' | 'running' | 'success' | 'fail';
     statusMsg?: string;
@@ -86,8 +83,7 @@ export const SoundTtsService = {
         record.startTime = TimeUtil.timestampMS()
         const fields = [
             'serverName', 'serverTitle', 'serverVersion',
-            'speaker',
-            'text', 'speed', 'seed', 'param',
+            'text', 'param',
             'status', 'statusMsg', 'startTime', 'endTime',
         ]
         record = this.encodeRecord(record)

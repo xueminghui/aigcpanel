@@ -54,7 +54,8 @@ export const VideoGen: TaskBiz = {
         }
         const res = await window.$mapi.server.callFunction(serverInfo, 'videoGen', {
             videoFile: videoTemplateRecord?.video,
-            soundFile: soundFile
+            soundFile: soundFile,
+            param: record.param,
         })
         // console.log('VideoGen.runFunc.res', res)
         if (res.code) {

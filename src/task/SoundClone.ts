@@ -39,8 +39,6 @@ export const SoundClone: TaskBiz = {
             promptAudio: record.promptWav,
             promptText: record.promptText,
             param: record.param,
-            speed: parseFloat(record.speed as any),
-            seed: parseInt(record.seed as any),
         })
         // console.log('SoundClone.runFunc.res', res)
         if (res.code) {

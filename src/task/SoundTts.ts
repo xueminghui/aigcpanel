@@ -1,7 +1,6 @@
 import {TaskBiz} from "../store/modules/task";
 import {useServerStore} from "../store/modules/server";
 import {SoundTtsService} from "../service/SoundTtsService";
-import {mapError} from "../lib/error";
 
 const serverStore = useServerStore()
 
@@ -37,9 +36,7 @@ export const SoundTts: TaskBiz = {
         })
         const res = await window.$mapi.server.callFunction(serverInfo, 'soundTts', {
             text: record.text,
-            speaker: record.speaker,
-            speed: parseFloat(record.speed as any),
-            seed: parseInt(record.seed as any),
+            param: record.param,
         })
         // console.log('SoundTts.runFunc.res', res)
         if (res.code) {

@@ -11,8 +11,11 @@ import {SoundCloneRecord, SoundCloneService} from "../../service/SoundCloneServi
 import {VideoTemplateRecord, VideoTemplateService} from "../../service/VideoTemplateService";
 import {EnumServerStatus} from "../../types/Server";
 import {VideoGenRecord, VideoGenService} from "../../service/VideoGenService";
+import ParamForm from "../common/ParamForm.vue";
+import {mapError} from "../../lib/error";
 
 const serverStore = useServerStore()
+const paramForm = ref<InstanceType<typeof ParamForm> | null>(null)
 
 const formData = ref({
     serverKey: '',
@@ -20,7 +23,10 @@ const formData = ref({
     soundType: 'soundTts',
     soundTtsId: 0,
     soundCloneId: 0,
+    param: {},
 });
+const formDataParam = ref([])
+
 const soundTtsRecords = ref<SoundTtsRecord[]>([])
 const soundCloneRecords = ref<SoundCloneRecord[]>([])
 const videoTemplateRecords = ref<VideoTemplateRecord[]>([])
@@ -46,15 +52,25 @@ watch(() => formData.value.soundType, async (value) => {
     immediate: true
 })
 
+watch(() => formData.value.serverKey, async (value) => {
+    // console.log('formData.serverKey', value)
+    const server = await serverStore.getByKey(value)
+    if (server) {
+        const res = await window.$mapi.server.config(await serverStore.serverInfo(server))
+        if (res.code) {
+            Dialog.tipError(mapError(res.msg))
+            return
+        }
+        formDataParam.value = res.data.functions.videoGen.param || []
+    }
+})
+
 onMounted(async () => {
     videoTemplateRecords.value = await VideoTemplateService.list()
 })
 
-const doRandomSeed = () => {
-    // formData.value.seed = Math.floor(Math.random() * 1000000) + ''
-}
-
 const doSubmit = async () => {
+    formData.value.param = paramForm.value.getValue()
     if (!formData.value.serverKey) {
         Dialog.tipError(t('请选择模型'))
         return
@@ -111,7 +127,7 @@ const doSubmit = async () => {
         soundTtsText: soundTtsRecord ? soundTtsRecord.text : '',
         soundCloneId: formData.value.soundCloneId,
         soundCloneText: soundCloneRecord ? soundCloneRecord.text : '',
-        param: {}
+        param: formData.value.param,
     }
     const id = await VideoGenService.submit(record)
     Dialog.tipSuccess(t('任务已经提交成功，等待视频生成完成'))
@@ -136,90 +152,87 @@ defineExpose({
 
 <template>
     <div class="rounded-xl shadow border p-4">
-        <div class="flex items-center">
-            <div class="flex-grow flex items-center h-12">
-                <div class="mr-1">
-                    <a-tooltip :content="$t('模型')">
-                        <i class="iconfont icon-server"></i>
-                        {{ $t('模型') }}
-                    </a-tooltip>
-                </div>
-                <div class="mr-3 w-56 flex-shrink-0">
-                    <ServerSelector v-model="formData.serverKey" functionName="videoGen"/>
-                </div>
+        <div class="flex items-center h-12">
+            <div class="mr-1">
+                <a-tooltip :content="$t('模型')">
+                    <i class="iconfont icon-server"></i>
+                    {{ $t('模型') }}
+                </a-tooltip>
+            </div>
+            <div class="mr-3 w-56 flex-shrink-0">
+                <ServerSelector v-model="formData.serverKey" functionName="videoGen"/>
             </div>
         </div>
-        <div class="flex items-center">
-            <div class="flex-grow flex items-center h-12">
-                <div class="mr-1">
-                    <a-tooltip :content="$t('声音')">
-                        <i class="iconfont icon-sound"></i>
-                        {{ $t('声音') }}
-                    </a-tooltip>
-                </div>
-                <div class="mr-1">
-                    <a-radio-group v-model="formData.soundType">
-                        <a-radio value="soundTts">
-                            <i class="iconfont icon-sound-generate"></i>
-                            {{ $t('声音合成') }}
-                        </a-radio>
-                        <a-radio value="soundClone">
-                            <i class="iconfont icon-sound-clone"></i>
-                            {{ $t('声音克隆') }}
-                        </a-radio>
-                    </a-radio-group>
-                </div>
-                <div class="mr-1" v-if="formData.soundType==='soundTts'">
-                    <a-tooltip :content="$t('声音合成')">
+        <div class="flex items-center h-12">
+            <div class="mr-1">
+                <a-tooltip :content="$t('声音')">
+                    <i class="iconfont icon-sound"></i>
+                    {{ $t('声音') }}
+                </a-tooltip>
+            </div>
+            <div class="mr-1">
+                <a-radio-group v-model="formData.soundType">
+                    <a-radio value="soundTts">
                         <i class="iconfont icon-sound-generate"></i>
-                    </a-tooltip>
-                </div>
-                <div class="mr-3 w-56 flex-shrink-0" v-if="formData.soundType==='soundTts'">
-                    <a-select v-model="formData.soundTtsId">
-                        <a-option :value="0">{{ $t('请选择') }}</a-option>
-                        <a-option v-for="record in soundTtsRecords" :key="record.id" :value="record.id">
-                            <div>
-                                #{{ record.id }} {{ record.text }}
-                            </div>
-                        </a-option>
-                    </a-select>
-                </div>
-                <div class="mr-1" v-if="formData.soundType==='soundClone'">
-                    <a-tooltip :content="$t('声音克隆')">
+                        {{ $t('声音合成') }}
+                    </a-radio>
+                    <a-radio value="soundClone">
                         <i class="iconfont icon-sound-clone"></i>
-                    </a-tooltip>
-                </div>
-                <div class="mr-3 w-56 flex-shrink-0" v-if="formData.soundType==='soundClone'">
-                    <a-select v-model="formData.soundCloneId">
-                        <a-option :value="0">{{ $t('请选择') }}</a-option>
-                        <a-option v-for="record in soundCloneRecords" :key="record.id" :value="record.id">
-                            <div>
-                                #{{ record.id }} {{ record.text }}
-                            </div>
-                        </a-option>
-                    </a-select>
-                </div>
+                        {{ $t('声音克隆') }}
+                    </a-radio>
+                </a-radio-group>
+            </div>
+            <div class="mr-1" v-if="formData.soundType==='soundTts'">
+                <a-tooltip :content="$t('声音合成')">
+                    <i class="iconfont icon-sound-generate"></i>
+                </a-tooltip>
+            </div>
+            <div class="mr-3 w-56 flex-shrink-0" v-if="formData.soundType==='soundTts'">
+                <a-select v-model="formData.soundTtsId">
+                    <a-option :value="0">{{ $t('请选择') }}</a-option>
+                    <a-option v-for="record in soundTtsRecords" :key="record.id" :value="record.id">
+                        <div>
+                            #{{ record.id }} {{ record.text }}
+                        </div>
+                    </a-option>
+                </a-select>
+            </div>
+            <div class="mr-1" v-if="formData.soundType==='soundClone'">
+                <a-tooltip :content="$t('声音克隆')">
+                    <i class="iconfont icon-sound-clone"></i>
+                </a-tooltip>
+            </div>
+            <div class="mr-3 w-56 flex-shrink-0" v-if="formData.soundType==='soundClone'">
+                <a-select v-model="formData.soundCloneId">
+                    <a-option :value="0">{{ $t('请选择') }}</a-option>
+                    <a-option v-for="record in soundCloneRecords" :key="record.id" :value="record.id">
+                        <div>
+                            #{{ record.id }} {{ record.text }}
+                        </div>
+                    </a-option>
+                </a-select>
             </div>
         </div>
-        <div class="flex items-center">
-            <div class="flex-grow flex items-center h-12">
-                <div class="mr-1">
-                    <a-tooltip :content="$t('视频')">
-                        <i class="iconfont icon-video-template"></i>
-                        {{ $t('视频') }}
-                    </a-tooltip>
-                </div>
-                <div class="mr-3 w-56 flex-shrink-0">
-                    <a-select v-model="formData.videoTemplateId">
-                        <a-option :value="0">{{ $t('请选择') }}</a-option>
-                        <a-option v-for="record in videoTemplateRecords" :key="record.id" :value="record.id">
-                            <div>
-                                {{ record.name }}
-                            </div>
-                        </a-option>
-                    </a-select>
-                </div>
+        <div class="flex items-center h-12">
+            <div class="mr-1">
+                <a-tooltip :content="$t('视频')">
+                    <i class="iconfont icon-video-template"></i>
+                    {{ $t('视频') }}
+                </a-tooltip>
             </div>
+            <div class="mr-3 w-56 flex-shrink-0">
+                <a-select v-model="formData.videoTemplateId">
+                    <a-option :value="0">{{ $t('请选择') }}</a-option>
+                    <a-option v-for="record in videoTemplateRecords" :key="record.id" :value="record.id">
+                        <div>
+                            {{ record.name }}
+                        </div>
+                    </a-option>
+                </a-select>
+            </div>
+        </div>
+        <div class="flex items-center min-h-12" v-if="formDataParam.length>0">
+            <ParamForm ref="paramForm" :param="formDataParam"/>
         </div>
         <div class="pt-2">
             <a-button type="primary" @click="doSubmit">
