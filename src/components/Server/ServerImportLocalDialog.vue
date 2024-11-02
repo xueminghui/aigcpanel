@@ -247,7 +247,7 @@ const emit = defineEmits({
                                 </a-button>
                             </div>
                             <div class="mt-3 text-sm text-gray-400 rounded-lg">
-                                模型一键启动压缩包，包含模型服务的配置文件和模型服务程序文件。
+                                {{ $t('模型一键启动压缩包，包含模型服务的配置文件和模型服务程序文件。')}}
                             </div>
                         </div>
                         <div class="w-1/2 px-3">
@@ -266,7 +266,7 @@ const emit = defineEmits({
                                 </a-button>
                             </div>
                             <div class="mt-3 text-sm text-gray-400 rounded-lg">
-                                模型服务目录，包含模型服务的配置文件和模型服务程序文件。
+                                {{ $t('模型服务目录，包含模型服务的配置文件和模型服务程序文件。' )}}
                             </div>
                         </div>
                     </div>
