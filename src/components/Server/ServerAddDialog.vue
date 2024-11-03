@@ -230,8 +230,8 @@ const emit = defineEmits({
         <div>
             <div class="">
                 <div v-if="!modelInfo.name">
-                    <div class="flex">
-                        <div class="w-1/2 px-3">
+                    <div class="">
+                        <div v-if="0" class="w-1/2 px-3">
                             <div>
                                 <img class="w-32 h-32 object-contain m-auto"
                                      src="./../../assets/image/server-file.svg"/>
@@ -250,7 +250,7 @@ const emit = defineEmits({
                                 {{ $t('模型一键启动压缩包，包含模型服务的配置文件和模型服务程序文件。')}}
                             </div>
                         </div>
-                        <div class="w-1/2 px-3">
+                        <div class="px-3">
                             <div>
                                 <img class="w-32 h-32 object-contain m-auto"
                                      src="./../../assets/image/server-folder.svg"/>

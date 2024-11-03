@@ -2,7 +2,7 @@
 
 import ServerStatus from "../components/Server/ServerStatus.vue";
 import {EnumServerType} from "../types/Server";
-import ServerImportLocalDialog from "../components/Server/ServerImportLocalDialog.vue";
+import ServerAddDialog from "../components/Server/ServerAddDialog.vue";
 import {ref} from "vue";
 import {useServerStore} from "../store/modules/server";
 import {AppConfig} from "../config";
@@ -15,7 +15,7 @@ import ServerActionInfo from "../components/Server/ServerActionInfo.vue";
 import ServerActionSetting from "../components/Server/ServerActionSetting.vue";
 import {functionToLabels} from "../lib/aigcpanel";
 
-const importLocalDialog = ref<InstanceType<typeof ServerImportLocalDialog> | null>(null)
+const addDialog = ref<InstanceType<typeof ServerAddDialog> | null>(null)
 const serverStore = useServerStore()
 const helpShow = ref(false)
 
@@ -49,7 +49,7 @@ const typeName = (type: string) => {
             <div class="flex items-center">
                 <a-button v-if="serverStore.records.length>0"
                           class="ml-1"
-                          @click="importLocalDialog?.show()">
+                          @click="addDialog?.show()">
                     <template #icon>
                         <icon-plus/>
                     </template>
@@ -73,7 +73,7 @@ const typeName = (type: string) => {
                 </div>
                 <div class="mt-10 text-center">
                     <a-button class="ml-1"
-                              @click="importLocalDialog?.show()">
+                              @click="addDialog?.show()">
                         <template #icon>
                             <icon-plus/>
                         </template>
@@ -159,7 +159,7 @@ const typeName = (type: string) => {
             </div>
         </div>
     </div>
-    <ServerImportLocalDialog ref="importLocalDialog" @update="doRefresh"/>
+    <ServerAddDialog ref="addDialog" @update="doRefresh"/>
 </template>
 
 <style scoped>
