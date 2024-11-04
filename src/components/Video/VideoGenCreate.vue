@@ -70,7 +70,7 @@ onMounted(async () => {
 })
 
 const doSubmit = async () => {
-    formData.value.param = paramForm.value.getValue()
+    formData.value.param = paramForm.value?.getValue() as any
     if (!formData.value.serverKey) {
         Dialog.tipError(t('请选择模型'))
         return

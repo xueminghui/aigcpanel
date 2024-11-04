@@ -79,6 +79,7 @@ defineExpose({
                 <a-table :scroll="{maxHeight:'60vh'}"
                          :columns="columns"
                          :pagination="false"
+                         row-key="id"
                          :data="records">
                     <template #video="{ record }">
                         <div class="p-2 shadow rounded-lg bg-gray-400 inline-block">

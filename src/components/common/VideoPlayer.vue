@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Player from 'xgplayer';
 import 'xgplayer/dist/index.min.css';
-import {onMounted, ref} from "vue";
+import {onBeforeUnmount, onMounted, ref} from "vue";
 
 const videoContainer = ref<HTMLDivElement | undefined>(undefined);
 
@@ -36,6 +36,12 @@ onMounted(() => {
         loop: props.loop,
         controls: props.controls,
     });
+})
+
+onBeforeUnmount(() => {
+    if (player) {
+        player.destroy();
+    }
 })
 
 </script>
