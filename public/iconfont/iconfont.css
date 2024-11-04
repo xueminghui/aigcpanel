@@ -1,8 +1,8 @@
 @font-face {
-  font-family: "iconfont"; /* Project id 4682396 */
-  src: url('iconfont.woff2?t=1727418577495') format('woff2'),
-       url('iconfont.woff?t=1727418577495') format('woff'),
-       url('iconfont.ttf?t=1727418577495') format('truetype');
+  font-family: "iconfont"; /* Project id 4705978 */
+  src: url('iconfont.woff2?t=1730719072577') format('woff2'),
+       url('iconfont.woff?t=1730719072577') format('woff'),
+       url('iconfont.ttf?t=1730719072577') format('truetype');
 }
 
 .iconfont {
@@ -13,40 +13,80 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.icon-network:before {
-  content: "\ea7c";
-}
-
-.icon-usb:before {
-  content: "\e652";
-}
-
-.icon-mirror:before {
-  content: "\e674";
-}
-
-.icon-stop:before {
-  content: "\ea89";
+.icon-sound:before {
+  content: "\e62a";
 }
 
 .icon-video:before {
-  content: "\e612";
+  content: "\e888";
 }
 
-.icon-android:before {
-  content: "\e703";
+.icon-sound-prompt:before {
+  content: "\e659";
 }
 
-.icon-camera:before {
-  content: "\e77d";
+.icon-video-template:before {
+  content: "\e65e";
 }
 
-.icon-apk:before {
-  content: "\e611";
+.icon-human:before {
+  content: "\e618";
+}
+
+.icon-folder:before {
+  content: "\e727";
+}
+
+.icon-global:before {
+  content: "\e614";
+}
+
+.icon-mic:before {
+  content: "\e713";
+}
+
+.icon-refresh-circle:before {
+  content: "\e61a";
+}
+
+.icon-cut:before {
+  content: "\e861";
+}
+
+.icon-seed:before {
+  content: "\e600";
+}
+
+.icon-speed:before {
+  content: "\e71c";
+}
+
+.icon-server:before {
+  content: "\e6be";
+}
+
+.icon-speaker:before {
+  content: "\e60d";
+}
+
+.icon-desktop:before {
+  content: "\e8e9";
+}
+
+.icon-network:before {
+  content: "\e675";
+}
+
+.icon-sound-generate:before {
+  content: "\e696";
+}
+
+.icon-sound-clone:before {
+  content: "\e628";
 }
 
 .icon-logo:before {
-  content: "\e66b";
+  content: "\e7ea";
 }
 
 .icon-avatar:before {
