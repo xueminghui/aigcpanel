@@ -1,12 +1,8 @@
 import {app, BrowserWindow, desktopCapturer, session, shell} from 'electron'
 import {optimizer} from '@electron-toolkit/utils'
-import path from 'node:path'
-import os from 'node:os'
 
 /** process.js 必须位于非依赖项的顶部 */
 import {isDummy} from "../lib/process";
-const isDummyNew = isDummy
-
 import {AppEnv, AppRuntime} from "../mapi/env";
 import {MAPI} from '../mapi/main';
 
@@ -16,11 +12,13 @@ import Log from "../mapi/log/main";
 import {ConfigMenu} from "../config/menu";
 import {ConfigLang} from "../config/lang";
 import {ConfigContextMenu} from "../config/contextMenu";
-import {MAIN_DIST, preloadDefault, RENDERER_DIST, rendererLoadPath, VITE_DEV_SERVER_URL} from "../lib/env-main";
+import {preloadDefault, rendererLoadPath} from "../lib/env-main";
 import {Page} from "../page";
 import {ConfigTray} from "../config/tray";
 import {icnsLogoPath, icoLogoPath, logoPath} from "../config/icon";
-import {isDev, isPackaged} from "../lib/env";
+import {isPackaged} from "../lib/env";
+
+const isDummyNew = isDummy
 
 // The built directory structure
 //
