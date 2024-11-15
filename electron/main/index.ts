@@ -20,17 +20,6 @@ import {isPackaged} from "../lib/env";
 
 const isDummyNew = isDummy
 
-// The built directory structure
-//
-// ├─┬ dist-electron
-// │ ├─┬ main
-// │ │ └── index.js    > Electron-Main
-// │ └─┬ preload
-// │   └── index.mjs   > Preload-Scripts
-// ├─┬ dist
-// │ └── index.html    > Electron-Renderer
-//
-
 process.on('uncaughtException', (error) => {
     console.error('Uncaught Exception:', error);
 });
@@ -61,9 +50,9 @@ ConfigContextMenu.init()
 
 Log.info('Starting')
 Log.info('LaunchInfo', {
-    isPackaged
+    isPackaged,
+    userData: AppEnv.userData
 })
-Log.info('UserDataDir', AppEnv.userData)
 
 function createWindow() {
     let icon = logoPath
@@ -184,8 +173,10 @@ app.on('window-all-closed', () => {
 
 app.on('second-instance', () => {
     if (AppRuntime.mainWindow) {
-        // Focus on the main window if the user tried to open another
-        if (AppRuntime.mainWindow.isMinimized()) AppRuntime.mainWindow.restore()
+        if (AppRuntime.mainWindow.isMinimized()) {
+            AppRuntime.mainWindow.restore()
+        }
+        AppRuntime.mainWindow.show()
         AppRuntime.mainWindow.focus()
     }
 })
@@ -201,21 +192,3 @@ app.on('activate', () => {
         createWindow()
     }
 })
-
-
-// New window example arg: new windows url
-// ipcMain.handle('open-win', (_, arg) => {
-//     const childWindow = new BrowserWindow({
-//         webPreferences: {
-//             preload,
-//             nodeIntegration: true,
-//             contextIsolation: false,
-//         },
-//     })
-//
-//     if (VITE_DEV_SERVER_URL) {
-//         childWindow.loadURL(`${VITE_DEV_SERVER_URL}#${arg}`)
-//     } else {
-//         childWindow.loadFile(indexHtml, {hash: arg})
-//     }
-// })
