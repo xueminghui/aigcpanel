@@ -5,7 +5,6 @@ import os from 'node:os'
 
 /** process.js 必须位于非依赖项的顶部 */
 import {isDummy} from "../lib/process";
-
 const isDummyNew = isDummy
 
 import {AppEnv, AppRuntime} from "../mapi/env";
@@ -17,7 +16,7 @@ import Log from "../mapi/log/main";
 import {ConfigMenu} from "../config/menu";
 import {ConfigLang} from "../config/lang";
 import {ConfigContextMenu} from "../config/contextMenu";
-import {MAIN_DIST, RENDERER_DIST, VITE_DEV_SERVER_URL} from "../lib/env-main";
+import {MAIN_DIST, preloadDefault, RENDERER_DIST, rendererLoadPath, VITE_DEV_SERVER_URL} from "../lib/env-main";
 import {Page} from "../page";
 import {ConfigTray} from "../config/tray";
 import {icnsLogoPath, icoLogoPath, logoPath} from "../config/icon";
@@ -54,10 +53,6 @@ if (!app.requestSingleInstanceLock()) {
 
 const hasSplashWindow = true
 
-const preload = path.join(MAIN_DIST, 'preload/index.mjs')
-const splashHtml = path.join(RENDERER_DIST, 'splash.html')
-const indexHtml = path.join(RENDERER_DIST, 'index.html')
-
 AppEnv.appRoot = process.env.APP_ROOT
 AppEnv.appData = app.getPath('appData')
 AppEnv.userData = app.getPath('userData')
@@ -68,8 +63,6 @@ ConfigContextMenu.init()
 
 Log.info('Starting')
 Log.info('LaunchInfo', {
-    splash: splashHtml,
-    index: indexHtml,
     isPackaged
 })
 Log.info('UserDataDir', AppEnv.userData)
@@ -92,11 +85,7 @@ function createWindow() {
             hasShadow: true,
             skipTaskbar: true,
         })
-        if (VITE_DEV_SERVER_URL) {
-            AppRuntime.splashWindow.loadURL(path.join(VITE_DEV_SERVER_URL, 'splash.html'))
-        } else {
-            AppRuntime.splashWindow.loadFile(splashHtml)
-        }
+        rendererLoadPath(AppRuntime.splashWindow, 'splash.html')
     }
     AppRuntime.mainWindow = new BrowserWindow({
         show: !hasSplashWindow,
@@ -112,7 +101,7 @@ function createWindow() {
         height: WindowConfig.initHeight,
         backgroundColor: '#f1f5f9',
         webPreferences: {
-            preload,
+            preload : preloadDefault,
             // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
             nodeIntegration: true,
             webSecurity: false,
@@ -138,12 +127,7 @@ function createWindow() {
         );
     });
 
-    // console.log('VITE_DEV_SERVER_URL:', VITE_DEV_SERVER_URL)
-    if (VITE_DEV_SERVER_URL) { // #298
-        AppRuntime.mainWindow.loadURL(VITE_DEV_SERVER_URL)
-    } else {
-        AppRuntime.mainWindow.loadFile(indexHtml)
-    }
+    rendererLoadPath(AppRuntime.mainWindow, 'index.html')
 
     AppRuntime.mainWindow.webContents.on('did-finish-load', () => {
         if (hasSplashWindow) {
