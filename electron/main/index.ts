@@ -17,6 +17,7 @@ import {Page} from "../page";
 import {ConfigTray} from "../config/tray";
 import {icnsLogoPath, icoLogoPath, logoPath} from "../config/icon";
 import {isPackaged} from "../lib/env";
+import {AppPosition} from "../mapi/app/lib/position";
 
 const isDummyNew = isDummy
 
