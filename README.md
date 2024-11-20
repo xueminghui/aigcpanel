@@ -70,14 +70,6 @@
 
 - 访问 [https://aigcpanel.com](https://aigcpanel.com) 下载 Windows 安装包，一键安装即可
 
-### MacOS
-
-- 访问 [https://aigcpanel.com](https://aigcpanel.com) 下载 MacOS 安装包，一键安装完成；
-
-### Linux
-
-- 访问 [https://aigcpanel.com](https://aigcpanel.com) 下载 Linux 安装包，一键安装完成；
-
 安装完成后，打开软件，下载模型一键启动包，即可使用。
 
 ## 技术栈
