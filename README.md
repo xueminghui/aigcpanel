@@ -26,10 +26,10 @@
   </tr>
   <tr>
     <td>
-      <video src=./demo/demo-1.mp4 controls preload></video>
+      <video src=https://github.com/modstart-lib/aigcpanel/raw/refs/heads/main/demo/demo-1.mp4 controls preload></video>
     </td>
     <td>
-      <video src=./demo/demo-1-output.mp4 controls preload></video>
+      <video src=https://github.com/modstart-lib/aigcpanel/raw/refs/heads/main/demo/demo-1-output.mp4 controls preload></video>
     </td>
   </tr>
 </table>
