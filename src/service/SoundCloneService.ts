@@ -13,8 +13,6 @@ export type SoundCloneRecord = {
     promptWav: string;
     promptText: string;
     text: string;
-    speed: number;
-    seed: number;
     param?: any;
 
     status?: 'queue' | 'running' | 'success' | 'fail';
@@ -89,7 +87,7 @@ export const SoundCloneService = {
         const fields = [
             'serverName', 'serverTitle', 'serverVersion',
             'promptName', 'promptWav', 'promptText',
-            'text', 'speed', 'seed', 'param',
+            'text', 'param',
             'status', 'statusMsg', 'startTime', 'endTime',
         ]
         record = this.encodeRecord(record)

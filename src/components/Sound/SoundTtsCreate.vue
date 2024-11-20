@@ -43,12 +43,12 @@ watch(() => formData.value.serverKey, async (value) => {
             Dialog.tipError(mapError(res.msg))
             return
         }
-        formDataParam.value = res.data.functions.soundTts.param || []
+        formDataParam.value = res.data.functions.soundTts?.param || []
     }
 })
 
 const doSubmit = async () => {
-    formData.value.param = paramForm.value.getValue()
+    formData.value.param = paramForm.value?.getValue() || {}
     if (!formData.value.serverKey) {
         Dialog.tipError(t('请选择模型'))
         return
