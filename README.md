@@ -26,10 +26,10 @@
   </tr>
   <tr>
     <td>
-      <video src=https://github.com/modstart-lib/aigcpanel/raw/refs/heads/main/demo/demo-1.mp4 controls preload></video>
+      <video src="https://ms-assets.modstart.com/data/video/2024/11/20/16022_hn8c_3431.mp4" controls preload></video>
     </td>
     <td>
-      <video src=https://github.com/modstart-lib/aigcpanel/raw/refs/heads/main/demo/demo-1-output.mp4 controls preload></video>
+      <video src="https://ms-assets.modstart.com/data/video/2024/11/20/16020_cr1s_6527.mp4" controls preload></video>
     </td>
   </tr>
 </table>
