@@ -17,6 +17,23 @@
 - 支持国际化，支持简体中文、英语
 - 支持多种模型一键启动包：`MuseTalk`、`cosyvoice`
 
+## 效果预览
+
+<table class="center">
+  <tr style="font-weight: bolder;text-align:center;">
+    <td width="50%">原视频</td>
+    <td width="50%">合成视频</td>
+  </tr>
+  <tr>
+    <td>
+      <video src="./demo/demo-1.mp4" controls preload></video>
+    </td>
+    <td>
+      <video src="./demo/demo-1-output.mp4" controls preload></video>
+    </td>
+  </tr>
+</table>
+
 ## 功能预览
 
 ### 视频合成
