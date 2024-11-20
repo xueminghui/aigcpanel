@@ -19,20 +19,7 @@
 
 ## 效果预览
 
-<table class="center">
-  <tr style="font-weight: bolder;text-align:center;">
-    <td width="50%">原视频</td>
-    <td width="50%">合成视频</td>
-  </tr>
-  <tr>
-    <td>
-      <video src="https://ms-assets.modstart.com/data/video/2024/11/20/16022_hn8c_3431.mp4" controls preload></video>
-    </td>
-    <td>
-      <video src="https://ms-assets.modstart.com/data/video/2024/11/20/16020_cr1s_6527.mp4" controls preload></video>
-    </td>
-  </tr>
-</table>
+参考 [demo](demo/) 中的视频文件。
 
 ## 功能预览
 
