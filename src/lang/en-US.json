@@ -188,6 +188,7 @@
     "512b163b": "Please enter the synthesis content",
     "5232d376": "Using the same seed ensures consistent generated results each time",
     "55517ea8": "Use Online Service",
+    "5777e18f": "Prompt audio should be longer than 3 seconds and shorter than 30 seconds, ensuring the audio is clear and audible.",
     "58055d93": "Some models require special handling when performing cross-language cloning, so it’s necessary to indicate whether it is a cross-language cloning operation.",
     "5affe2ba": "When clicking Close",
     "5b0c1880": "A model with the same version already exists.",

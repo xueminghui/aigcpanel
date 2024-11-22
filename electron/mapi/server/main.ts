@@ -76,8 +76,12 @@ ipcMain.handle('server:callFunction', async (event, serverInfo: ServerInfo, meth
     try {
         return await func.bind(module)(serverInfo, data)
     } catch (e) {
+        // to string
+        if(typeof e === 'object') {
+            e = e.toString()
+        }
         Log.error('mapi.server.callFunction.error', e)
-        throw new Error(e)
+        throw e
     }
 })
 
