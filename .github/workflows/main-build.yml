@@ -72,12 +72,28 @@ jobs:
                 dist-release/*.AppImage:aigcpanel/aigcpanel-${{ env.DIST_FILE_NAME }}/
                 dist-release/*.deb:aigcpanel/aigcpanel-${{ env.DIST_FILE_NAME }}/
 
-#      - name: Upload Artifact
-#        uses: actions/upload-artifact@v4
-#        with:
-#            path: |
-#                dist-release/*.exe
-#                dist-release/*.dmg
-#                dist-release/*.AppImage
-#                dist-release/*.deb
+      - name: Upload Artifact Windows
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+            name: windows-artifact
+            path: |
+                dist-release/*.exe
+
+      - name: Upload Artifact Macos
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+            name: macos-artifact
+            path: |
+                dist-release/*.dmg
+
+      - name: Upload Artifact Linux
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+            name: linux-artifact
+            path: |
+                dist-release/*.AppImage
+                dist-release/*.deb
 
