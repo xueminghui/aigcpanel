@@ -62,6 +62,14 @@ export const TimeUtil = {
         if (m > 0) result.push(`${m}${t('分钟')}`)
         if (s > 0) result.push(`${s}${t('秒')}`)
         return result.join('')
+    },
+    replacePattern(text: string) {
+        return text.replaceAll('{year}', dayjs().format('YYYY'))
+            .replaceAll('{month}', dayjs().format('MM'))
+            .replaceAll('{day}', dayjs().format('DD'))
+            .replaceAll('{hour}', dayjs().format('HH'))
+            .replaceAll('{minute}', dayjs().format('mm'))
+            .replaceAll('{second}', dayjs().format('ss'))
     }
 }
 
@@ -123,6 +131,9 @@ export const VersionUtil = {
     },
     le: (v1: string, v2: string) => {
         return VersionUtil.compare(v1, v2) <= 0
+    },
+    eq: (v1: string, v2: string) => {
+        return VersionUtil.compare(v1, v2) === 0
     }
 }
 
