@@ -147,15 +147,7 @@ declare interface Window {
                 },
                 data: any,
             }>,
-            save: (data: {
-                apiToken: string,
-                user: {
-                    id: string,
-                    name: string,
-                    avatar: string,
-                },
-                data: any,
-            }) => Promise<void>,
+            refresh: () => Promise<void>,
             getApiToken: () => Promise<string>,
             getWebEnterUrl: (url: string) => Promise<string>,
             openWebUrl: (url: string) => Promise<void>,
