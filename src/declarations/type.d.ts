@@ -152,9 +152,6 @@ declare interface Window {
             // channel main <-> render
             channelSend: (channel: string, data: any) => Promise<void>,
         },
-        page: {
-            open: (name: string, option?: any) => Promise<void>,
-        },
         user: {
             open: (option?: any) => Promise<void>,
             get: () => Promise<{

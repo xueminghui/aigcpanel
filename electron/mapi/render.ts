@@ -12,7 +12,6 @@ import ui from "./ui/render";
 import updater from "./updater/render";
 import statistics from "./statistics/render";
 import lang from "./lang/render";
-import page from "./page/render";
 import user from "./user/render";
 import misc from "./misc/render";
 
@@ -34,7 +33,6 @@ export const MAPI = {
                 ui,
                 updater,
                 statistics,
-                page,
                 lang,
                 user,
                 misc,
