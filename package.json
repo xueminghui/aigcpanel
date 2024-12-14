@@ -73,7 +73,6 @@
         "iconv-lite": "^0.6.3",
         "js-base64": "^3.7.7",
         "lodash-es": "^4.17.21",
-        "node-mac-permissions": "^2.4.0",
         "nodejs-base64": "^2.0.0",
         "pinia": "^2.1.7",
         "showdown": "^2.1.0",
@@ -86,5 +85,8 @@
         "wavesurfer.js": "^7.8.6",
         "xgplayer": "^3.0.20",
         "yauzl": "^3.1.3"
+    },
+    "optionalDependencies": {
+        "node-mac-permissions": "^2.4.0"
     }
 }
