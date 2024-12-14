@@ -111,18 +111,18 @@ export const serverStore = defineStore("server", {
             serverRuntime.status = EnumServerStatus.STARTING
             serverRuntime.startTimestampMS = TimeUtil.timestampMS()
             serverRuntime.logFile = `logs/${server.name}_${server.version}_${TimeUtil.dateString()}_${serverRuntime.startTimestampMS}.log`
-            const eventChannel = await window.$mapi.event.channelCreate(function (channelData) {
+            const eventChannel = window.__page.createChannel(function (channelData) {
                 const {type, data} = channelData
                 switch (type) {
                     case 'success':
                         clearTimeout(serverRuntime.pingCheckTimer)
                         serverRuntime.status = EnumServerStatus.STOPPED
-                        window.$mapi.event.channelDestroy(eventChannel).then()
+                        window.__page.destroyChannel(eventChannel)
                         break
                     case 'error':
                         clearTimeout(serverRuntime.pingCheckTimer)
                         serverRuntime.status = EnumServerStatus.ERROR
-                        window.$mapi.event.channelDestroy(eventChannel).then()
+                        window.__page.destroyChannel(eventChannel)
                         break
                     case 'starting':
                         break
