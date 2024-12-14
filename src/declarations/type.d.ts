@@ -148,7 +148,10 @@ declare interface Window {
         },
         event: {
             send: (name: string, type: string, data: any) => void,
-            callPage: (name: string, type: string, data?: any, option?: any) => Promise<ApiResult<any>>,
+            callPage: (name: string, type: string, data?: any, option?: {
+                waitReadyTimeout?: number,
+                timeout?: number
+            }) => Promise<ApiResult<any>>,
             // channel main <-> render
             channelSend: (channel: string, data: any) => Promise<void>,
         },
