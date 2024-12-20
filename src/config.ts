@@ -3,15 +3,10 @@ import {TimeUtil} from "../electron/lib/util";
 
 const BASE_URL = 'https://aigcpanel.com';
 
-let version = packageJson.version
-if (version.includes('-beta')) {
-    version = version.replace('-beta', `-beta-${TimeUtil.datetimeString()}`);
-}
-
 export const AppConfig = {
     name: 'AigcPanel',
     slogan: '一站式AI数字人系统',
-    version,
+    version: packageJson.version,
     website: `${BASE_URL}`,
     websiteGithub: 'https://github.com/modstart-lib/aigcpanel',
     websiteGitee: 'https://gitee.com/modstart-lib/aigcpanel',
