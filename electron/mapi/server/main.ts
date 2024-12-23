@@ -41,8 +41,8 @@ ipcMain.handle('server:ping', async (event, serverInfo: ServerInfo) => {
         return await module.ping()
     } catch (e) {
         Log.error('mapi.server.ping.error', e)
-        throw new Error(e)
     }
+    return false
 })
 
 ipcMain.handle('server:stop', async (event, serverInfo: ServerInfo) => {
@@ -77,7 +77,7 @@ ipcMain.handle('server:callFunction', async (event, serverInfo: ServerInfo, meth
         return await func.bind(module)(serverInfo, data)
     } catch (e) {
         // to string
-        if(typeof e === 'object') {
+        if (typeof e === 'object') {
             e = e.toString()
         }
         Log.error('mapi.server.callFunction.error', e)
