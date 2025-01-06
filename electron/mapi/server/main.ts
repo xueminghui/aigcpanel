@@ -2,28 +2,48 @@ import ServerApi from './api'
 import {ipcMain} from "electron";
 import {Log} from "../log/main";
 import {mapError} from "./error";
+import {AigcServer} from "../../aigcserver";
 
-const serverModule = {}
+type ServerModule = {
+    type: 'buildIn' | 'custom',
+    init: (api: typeof ServerApi) => Promise<any>,
+    start: (serverInfo: ServerInfo) => Promise<any>,
+    stop: (serverInfo: ServerInfo) => Promise<any>,
+    ping: () => Promise<boolean>,
+    config: () => Promise<any>,
+}
+
+const serverModule: {
+    [key: string]: ServerModule
+} = {}
 
 const init = () => {
 
 }
 
-const getModule = async (serverInfo: ServerInfo) => {
-    // console.log('getModule', serverInfo)
+const getModule = async (serverInfo: ServerInfo): Promise<ServerModule> => {
     if (!serverModule[serverInfo.localPath]) {
         try {
-            const serverPath = `${serverInfo.localPath}/server.js`
-            const module = await import(`file://${serverPath}`)
-            // console.log('module', module)
-            await module.default.init(ServerApi)
-            serverModule[serverInfo.localPath] = module.default
+            if (serverInfo.name in AigcServer) {
+                const server = AigcServer[serverInfo.name]
+                await server.init(ServerApi)
+                server.type = 'buildIn'
+                serverModule[serverInfo.localPath] = server
+            } else {
+                const serverPath = `${serverInfo.localPath}/server.js`
+                const module = await import(`file://${serverPath}`)
+                // console.log('module', module)
+                await module.default.init(ServerApi)
+                module.default.type = 'custom'
+                serverModule[serverInfo.localPath] = module.default
+            }
         } catch (e) {
             const error = mapError(e)
             Log.error('mapi.server.getModule.error', error)
             throw error
         }
     }
+    // console.log('getModule', serverInfo, serverModule[serverInfo.localPath])
     return serverModule[serverInfo.localPath]
 }
 
