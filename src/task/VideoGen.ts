@@ -52,10 +52,18 @@ export const VideoGen: TaskBiz = {
         if (!soundFile) {
             throw new Error('SoundFileEmpty')
         }
-        const res = await window.$mapi.server.callFunction(serverInfo, 'videoGen', {
+        let res
+        await window.$mapi.server.callFunction(serverInfo, 'videoGen', {
             videoFile: videoTemplateRecord?.video,
             soundFile: soundFile,
             param: record.param,
+        }).then(r => {
+            res = r
+        }).catch(e => {
+            res = {
+                code: -1,
+                msg: e,
+            }
         })
         // console.log('VideoGen.runFunc.res', res)
         if (res.code) {

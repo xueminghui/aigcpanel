@@ -34,9 +34,17 @@ export const SoundTts: TaskBiz = {
         await SoundTtsService.update(bizId as any, {
             status: 'running',
         })
-        const res = await window.$mapi.server.callFunction(serverInfo, 'soundTts', {
+        let res
+        await window.$mapi.server.callFunction(serverInfo, 'soundTts', {
             text: record.text,
             param: record.param,
+        }).then(r => {
+            res = r
+        }).catch(e => {
+            res = {
+                code: -1,
+                msg: e,
+            }
         })
         // console.log('SoundTts.runFunc.res', res)
         if (res.code) {
