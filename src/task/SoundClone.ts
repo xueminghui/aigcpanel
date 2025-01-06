@@ -49,10 +49,7 @@ export const SoundClone: TaskBiz = {
             }
         })
         if (res.code) {
-            if (res.msg) {
-                throw res.msg
-            }
-            throw 'apiRequest soundTts fail'
+            throw res.msg || 'apiRequest soundClone fail'
         }
         switch (res.data.type) {
             case 'success':

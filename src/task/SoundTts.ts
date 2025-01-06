@@ -48,11 +48,7 @@ export const SoundTts: TaskBiz = {
         })
         // console.log('SoundTts.runFunc.res', res)
         if (res.code) {
-            if (res.msg) {
-                throw new Error(res.msg)
-            } else {
-                throw new Error('apiRequest soundTts fail')
-            }
+            throw res.msg || 'apiRequest soundTts fail'
         }
         switch (res.data.type) {
             case 'success':

@@ -67,11 +67,7 @@ export const VideoGen: TaskBiz = {
         })
         // console.log('VideoGen.runFunc.res', res)
         if (res.code) {
-            if (res.msg) {
-                throw new Error(res.msg)
-            } else {
-                throw new Error('apiRequest videoGen fail')
-            }
+            throw res.msg || 'apiRequest videoGen fail'
         }
         switch (res.data.type) {
             case 'success':
