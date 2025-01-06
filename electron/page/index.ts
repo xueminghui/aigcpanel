@@ -1,7 +1,6 @@
 import {Events} from "../mapi/event/main";
 import {AppEnv, AppRuntime} from "../mapi/env";
 import {PageUser} from "./user";
-import {PageThirdPartyImageBeautifier} from "./thirdPartyImageBeautifier";
 import {BrowserWindow, shell} from "electron";
 import {rendererLoadPath} from "../lib/env-main";
 import {PageGuide} from "./guide";
@@ -11,7 +10,6 @@ import {PageFeedback} from "./feedback";
 import {PagePayment} from "./payment";
 
 const Pages = {
-    'thirdPartyImageBeautifier': PageThirdPartyImageBeautifier,
     'user': PageUser,
     'guide': PageGuide,
     'setup': PageSetup,

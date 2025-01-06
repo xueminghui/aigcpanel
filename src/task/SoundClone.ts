@@ -27,25 +27,32 @@ export const SoundClone: TaskBiz = {
     },
 
     runFunc: async (bizId, bizParam) => {
-        // console.log('SoundClone.runFunc', {bizId, bizParam})
+        console.log('SoundClone.runFunc', {bizId, bizParam})
         const {record, server} = await prepareData(bizId, bizParam)
         const serverInfo = await serverStore.serverInfo(server)
         // console.log('runFunc', serverInfo, record)
         await SoundCloneService.update(bizId as any, {
             status: 'running',
         })
-        const res = await window.$mapi.server.callFunction(serverInfo, 'soundClone', {
+        let res
+        await window.$mapi.server.callFunction(serverInfo, 'soundClone', {
             text: record.text,
             promptAudio: record.promptWav,
             promptText: record.promptText,
             param: record.param,
+        }).then(r => {
+            res = r
+        }).catch(e => {
+            res = {
+                code: -1,
+                msg: e,
+            }
         })
-        // console.log('SoundClone.runFunc.res', res)
         if (res.code) {
             if (res.msg) {
-                throw new Error(res.msg)
+                throw res.msg
             }
-            throw new Error('apiRequest soundTts fail')
+            throw 'apiRequest soundTts fail'
         }
         switch (res.data.type) {
             case 'success':
