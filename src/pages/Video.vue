@@ -35,7 +35,6 @@ onMounted(() => {
                 </div>
             </div>
             <div class="p-2 rounded-lg mr-2 mb-4 cursor-pointer"
-                 v-if="platformName && ['win'].includes(platformName)"
                  :class="tab === 'videoGen' ? 'bg-gray-100' : ''"
                  @click="tab = 'videoGen'">
                 <div class="text-base">

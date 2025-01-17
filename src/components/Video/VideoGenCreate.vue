@@ -114,7 +114,7 @@ const doSubmit = async () => {
     }
     if (server.status !== EnumServerStatus.RUNNING) {
         Dialog.tipError(t('模型未启动'))
-        // return
+        return
     }
     const record: VideoGenRecord = {
         serverName: server.name,

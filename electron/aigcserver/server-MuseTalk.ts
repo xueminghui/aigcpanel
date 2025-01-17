@@ -1,3 +1,5 @@
+import {VersionUtil} from "../lib/util";
+
 const serverRuntime = {
     port: 0,
 }
@@ -29,27 +31,26 @@ export const ServerMuseTalk = {
         } else if (!serverRuntime.port || !await this.ServerApi.app.isPortAvailable(serverRuntime.port)) {
             serverRuntime.port = await this.ServerApi.app.availablePort(50617)
         }
+        const env = await this.ServerApi.env()
         if (serverInfo.setting?.['startCommand']) {
             command.push(serverInfo.setting.startCommand)
         } else {
-            //command.push(`"${serverInfo.localPath}/server/main"`)
-            command.push(`"${serverInfo.localPath}/server/.ai/python.exe"`)
-            command.push('-u')
-            command.push(`"${serverInfo.localPath}/server/run.py"`)
-            if (serverInfo.setting?.['gpuMode'] === 'cpu') {
-                command.push('--gpu_mode=cpu')
+            if (VersionUtil.ge(serverInfo.version, '0.2.0')) {
+                command.push(`"${serverInfo.localPath}/launcher"`)
+                env['AIGCPANEL_SERVER_PORT'] = serverRuntime.port
+            } else {
+                //command.push(`"${serverInfo.localPath}/server/main"`)
+                command.push(`"${serverInfo.localPath}/server/.ai/python.exe"`)
+                command.push('-u')
+                command.push(`"${serverInfo.localPath}/server/run.py"`)
+                if (serverInfo.setting?.['gpuMode'] === 'cpu') {
+                    command.push('--gpu_mode=cpu')
+                }
             }
         }
         shellController = await this.ServerApi.app.spawnShell(command, {
-            cwd: `${serverInfo.localPath}/server`,
-            env: {
-                GRADIO_SERVER_PORT: serverRuntime.port,
-                PATH: [
-                    process.env.PATH,
-                    `${serverInfo.localPath}/server`,
-                    `${serverInfo.localPath}/server/.ai/ffmpeg/bin`,
-                ].join(';')
-            },
+            env,
+            cwd: serverInfo.localPath,
             stdout: (data) => {
                 this.ServerApi.file.appendText(serverInfo.logFile, data)
             },
@@ -63,6 +64,7 @@ export const ServerMuseTalk = {
                 this.ServerApi.file.appendText(serverInfo.logFile, data)
                 this._send(serverInfo, 'error', serverInfo)
             },
+
         })
     },
     async ping(serverInfo) {
@@ -110,7 +112,7 @@ export const ServerMuseTalk = {
         }
     },
     async videoGen(serverInfo, data) {
-        console.log('videoGen', serverInfo, data)
+        console.log('videoGen', JSON.stringify(data))
         const client = await this._client()
         const resultData = {
             // success, querying, retry
@@ -133,14 +135,23 @@ export const ServerMuseTalk = {
         isRunning = true
         resultData.start = Date.now()
         try {
-            const result = await client.predict("/predict", [
-                this.ServerApi.GradioHandleFile(data.videoFile),
-                this.ServerApi.GradioHandleFile(data.soundFile),
-                parseInt(data.param.box)
-            ]);
-            // console.log('videoGen.result', JSON.stringify(result))
+            const payload = []
+            if (VersionUtil.ge(serverInfo.version, '0.2.0')) {
+                payload.push(data.videoFile)
+                payload.push(data.soundFile)
+            } else {
+                payload.push(this.ServerApi.GradioHandleFile(data.videoFile))
+                payload.push(this.ServerApi.GradioHandleFile(data.soundFile))
+            }
+            payload.push(parseInt(data.param.box))
+            const result = await client.predict("/predict", payload);
+            console.log('videoGen.result', JSON.stringify(result))
             resultData.end = Date.now()
-            resultData.data.filePath = result.data[0].value.video.path
+            if (VersionUtil.ge(serverInfo.version, '0.2.0')) {
+                resultData.data.filePath = result.data[0].value[0].name
+            } else {
+                resultData.data.filePath = result.data[0].value.video.path
+            }
             return {
                 code: 0,
                 msg: 'ok',

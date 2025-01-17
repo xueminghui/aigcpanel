@@ -1,10 +1,11 @@
 import {net} from 'electron'
 import {Client, handle_file} from "@gradio/client";
-import {platformArch, platformName} from "../../lib/env";
+import {platformArch, platformName, platformUUID} from "../../lib/env";
 import {Events} from "../event/main";
 import {Apps} from "../app";
 import {Files} from "../file/main";
 import fs from 'node:fs'
+import User, {UserApi} from "../user/main";
 
 const request = async (url, data?: {}, option?: {}) => {
     option = Object.assign({
@@ -92,6 +93,15 @@ const requestUrlFileToLocal = async (url, path) => {
     })
 }
 
+const env = async () => {
+    const result = {}
+    result['AIGCPANEL_SERVER_API_TOKEN'] = await User.getApiToken()
+    result['AIGCPANEL_SERVER_API_KEY'] = ''
+    result['AIGCPANEL_SERVER_UUID'] = platformUUID()
+    result['AIGCPANEL_SERVER_LAUNCHER'] = 'gui'
+    return result
+}
+
 export default {
     GradioClient: Client,
     GradioHandleFile: handle_file,
@@ -105,4 +115,5 @@ export default {
     requestUrlFileToLocal,
     platformName: platformName(),
     platformArch: platformArch(),
+    env,
 }

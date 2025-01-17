@@ -1,3 +1,5 @@
+import {VersionUtil} from "../lib/util";
+
 const serverRuntime = {
     port: 0,
 }
@@ -29,13 +31,19 @@ export const ServerCosyvoice = {
         } else if (!serverRuntime.port || !await this.ServerApi.app.isPortAvailable(serverRuntime.port)) {
             serverRuntime.port = await this.ServerApi.app.availablePort(50617)
         }
+        const env = await this.ServerApi.env()
         if (serverInfo.setting?.['startCommand']) {
             command.push(serverInfo.setting.startCommand)
         } else {
-            command.push(`"${serverInfo.localPath}/main"`)
-            command.push(`--port=${serverRuntime.port}`)
-            if (serverInfo.setting?.['gpuMode'] === 'cpu') {
-                command.push('--gpu_mode=cpu')
+            if (VersionUtil.ge(serverInfo.version, '0.1.0')) {
+                command.push(`"${serverInfo.localPath}/launcher"`)
+                env['AIGCPANEL_SERVER_PORT'] = serverRuntime.port
+            } else {
+                command.push(`"${serverInfo.localPath}/main"`)
+                command.push(`--port=${serverRuntime.port}`)
+                if (serverInfo.setting?.['gpuMode'] === 'cpu') {
+                    command.push('--gpu_mode=cpu')
+                }
             }
         }
         shellController = await this.ServerApi.app.spawnShell(command, {
@@ -52,6 +60,8 @@ export const ServerCosyvoice = {
                 this.ServerApi.file.appendText(serverInfo.logFile, data)
                 this._send(serverInfo, 'error', serverInfo)
             },
+            env,
+            cwd: serverInfo.localPath,
         })
     },
     async ping(serverInfo) {
