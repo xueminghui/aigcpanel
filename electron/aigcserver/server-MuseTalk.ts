@@ -38,6 +38,9 @@ export const ServerMuseTalk = {
             if (VersionUtil.ge(serverInfo.version, '0.2.0')) {
                 command.push(`"${serverInfo.localPath}/launcher"`)
                 env['AIGCPANEL_SERVER_PORT'] = serverRuntime.port
+                const dep = process.platform === 'win32' ? ';' : ':'
+                env['PATH'] = process.env['PATH'] || ''
+                env['PATH'] = `${serverInfo.localPath}/binary${dep}${env['PATH']}`
             } else {
                 //command.push(`"${serverInfo.localPath}/server/main"`)
                 command.push(`"${serverInfo.localPath}/server/.ai/python.exe"`)

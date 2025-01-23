@@ -38,6 +38,9 @@ export const ServerCosyvoice = {
             if (VersionUtil.ge(serverInfo.version, '0.1.0')) {
                 command.push(`"${serverInfo.localPath}/launcher"`)
                 env['AIGCPANEL_SERVER_PORT'] = serverRuntime.port
+                const dep = process.platform === 'win32' ? ';' : ':'
+                env['PATH'] = process.env['PATH'] || ''
+                env['PATH'] = `${serverInfo.localPath}/binary${dep}${env['PATH']}`
             } else {
                 command.push(`"${serverInfo.localPath}/main"`)
                 command.push(`--port=${serverRuntime.port}`)
