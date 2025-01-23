@@ -66,12 +66,12 @@ const typeName = (type: string) => {
         <div class="-mx-2">
             <div v-if="!serverStore.records.length" class="py-20">
                 <div class="text-center">
-                    <img class="h-40 m-auto opacity-50" src="./../assets/image/server-empty.svg"/>
+                    <img class="h-32 m-auto opacity-50" src="./../assets/image/server-empty.svg"/>
                 </div>
-                <div class="mt-10 text-center text-lg text-gray-400">
+                <div class="mt-5 text-center text-gray-400">
                     <div>{{ $t('暂时还没有模型，请添加模型~') }}</div>
                 </div>
-                <div class="mt-10 text-center">
+                <div class="mt-5 text-center">
                     <a-button class="ml-1"
                               @click="addDialog?.show()">
                         <template #icon>
@@ -89,13 +89,13 @@ const typeName = (type: string) => {
                         <template #icon>
                             <icon-book class="mr-1"/>
                         </template>
-                        {{ $t('在哪里找到模型文件？') }}
+                        {{ $t('如何添加模型？') }}
                     </a-button>
                 </div>
                 <div v-if="helpShow" class="pt-5 text-center">
                     <div class="inline-block bg-gray-100 text-left rounded-lg p-6 leading-8">
-                        <div>① {{ $t('访问官方提供的可用模型页面，下载模型文件到本地') }}</div>
-                        <div>② {{ $t('在本页面导入模型压缩包 zip 文件') }}</div>
+                        <div>① {{ $t('访问官方模型页面，下载模型到本地') }}</div>
+                        <div>② {{ $t('解压模型zip到本地，选择模型目录导入') }}</div>
                         <div class="pt-3">
                             {{ $t('更多内容，请查看') }}
                             <a href="javascript:;" class="text-link" @click="doHelp">

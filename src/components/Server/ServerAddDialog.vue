@@ -6,6 +6,8 @@ import {functionToLabels} from "../../lib/aigcpanel";
 import {mapError} from "../../lib/error";
 import {EnumServerType, ServerRecord} from "../../types/Server";
 import {useServerStore} from "../../store/modules/server";
+import {VersionUtil} from "../../lib/util";
+import {AppConfig} from "../../config";
 
 const serverStore = useServerStore()
 const visible = ref(false)
@@ -14,8 +16,10 @@ const modelInfo = ref({
     type: EnumServerType.LOCAL as EnumServerType,
     name: '',
     version: '',
+    serverRequire: '',
     title: '',
     description: '',
+    deviceDescription: '',
     path: '',
     platformName: '',
     platformArch: '',
@@ -45,6 +49,8 @@ const emptyModelInfo = () => {
     modelInfo.value.version = ''
     modelInfo.value.title = ''
     modelInfo.value.description = ''
+    modelInfo.value.serverRequire = ''
+    modelInfo.value.deviceDescription = ''
     modelInfo.value.path = ''
     modelInfo.value.platformName = ''
     modelInfo.value.platformArch = ''
@@ -52,44 +58,6 @@ const emptyModelInfo = () => {
     modelInfo.value.functions = []
     modelInfo.value.settings = []
     modelInfo.value.setting = {}
-}
-
-const doSubmitLocal = async (target: string) => {
-    logStatus.value = t('正在解压文件')
-    try {
-        // console.log('unzip.start', modelInfo.value.path, target)
-        await window.$mapi.misc.unzip(modelInfo.value.path, target, {
-            process: (type: string, file: any) => {
-                switch (type) {
-                    case 'start':
-                        logStatus.value = t('正在解压 {name}', {name: file.fileName})
-                        break
-                    case 'end':
-                        break
-                    default:
-                        console.error('unzip', type, file)
-                        break
-                }
-            },
-        })
-        // console.log('unzip.end', modelInfo.value.path, target)
-        // console.log('entry', modelInfo.value.entry)
-        if (modelInfo.value.entry) {
-            const executable = target + '/' + modelInfo.value.entry
-            const executableAbsolute = window.$mapi.file.absolutePath(executable)
-            // console.log('executable', executable)
-            if (await window.$mapi.file.exists(executableAbsolute)) {
-                await window.$mapi.app.fixExecutable(executable)
-                // console.log('fixExecutable', executable)
-            }
-        }
-    } catch (e) {
-        console.error('ServerImportLocalDialog.doSubmit.error', e)
-        Dialog.tipError(mapError(e))
-        isImporting.value = false
-        return
-    }
-    logStatus.value = t('文件解压完成')
 }
 
 const doSubmitLocalDir = async () => {
@@ -132,10 +100,12 @@ const doSubmit = async () => {
         Dialog.tipError(t('模型架构不匹配'))
         return
     }
+    if (!VersionUtil.match(AppConfig.version, modelInfo.value.serverRequire)) {
+        Dialog.tipError(t('软件不满足模型版本要求'))
+        return
+    }
     isImporting.value = true
-    if (modelInfo.value.type === EnumServerType.LOCAL) {
-        await doSubmitLocal(target)
-    } else if (modelInfo.value.type === EnumServerType.LOCAL_DIR) {
+    if (modelInfo.value.type === EnumServerType.LOCAL_DIR) {
         await doSubmitLocalDir()
     } else {
         Dialog.tipError(t('模型类型错误'))
@@ -152,6 +122,10 @@ const doSelectFileDir = async () => {
     if (!serverPath) {
         return
     }
+    if (!/^[a-zA-Z0-9\/:\-\\.]+$/.test(serverPath)) {
+        Dialog.tipError(t('模型路径不能包含非英文、空格等特殊字符'))
+        return
+    }
     emptyModelInfo()
     loading.value = true
     try {
@@ -162,6 +136,8 @@ const doSelectFileDir = async () => {
         modelInfo.value.type = EnumServerType.LOCAL_DIR
         modelInfo.value.name = json.name || ''
         modelInfo.value.version = json.version || ''
+        modelInfo.value.serverRequire = json.serverRequire || '*'
+        modelInfo.value.deviceDescription = json.deviceDescription || ''
         modelInfo.value.title = json.title || ''
         modelInfo.value.description = json.description || ''
         modelInfo.value.path = serverPath
@@ -180,31 +156,7 @@ const doSelectFileDir = async () => {
 }
 
 const doSelectFile = async () => {
-    const serverPath = await window.$mapi.file.openFile()
-    if (!serverPath) {
-        return
-    }
-    emptyModelInfo()
-    loading.value = true
-    try {
-        const content = await window.$mapi.misc.getZipFileContent(serverPath, 'config.json')
-        const json = JSON.parse(content)
-        modelInfo.value.type = EnumServerType.LOCAL
-        modelInfo.value.name = json.name || ''
-        modelInfo.value.version = json.version || ''
-        modelInfo.value.title = json.title || ''
-        modelInfo.value.description = json.description || ''
-        modelInfo.value.path = serverPath
-        modelInfo.value.platformName = json.platformName || ''
-        modelInfo.value.platformArch = json.platformArch || ''
-        modelInfo.value.entry = json.entry || ''
-        modelInfo.value.functions = json.functions || []
-        logStatus.value = ''
-    } catch (e) {
-        console.log('ServerImportLocalDialog.doSelectFile.error', e)
-        Dialog.tipError(t('模型文件解析失败，请选择正确的模型文件'))
-    }
-    loading.value = false
+    Dialog.tipError(t('敬请期待'))
 }
 defineExpose({
     show,
@@ -230,27 +182,8 @@ const emit = defineEmits({
         <div>
             <div class="">
                 <div v-if="!modelInfo.name">
-                    <div class="">
-                        <div v-if="0" class="w-1/2 px-3">
-                            <div>
-                                <img class="w-32 h-32 object-contain m-auto"
-                                     src="./../../assets/image/server-file.svg"/>
-                            </div>
-                            <div>
-                                <a-button @click="doSelectFile"
-                                          class="block w-full"
-                                          :loading="loading">
-                                    <template #icon>
-                                        <icon-file/>
-                                    </template>
-                                    {{ t('选择模型ZIP文件') }}
-                                </a-button>
-                            </div>
-                            <div class="mt-3 text-sm text-gray-400 rounded-lg">
-                                {{ $t('模型一键启动压缩包，包含模型服务的配置文件和模型服务程序文件。')}}
-                            </div>
-                        </div>
-                        <div class="px-3">
+                    <div class="flex">
+                        <div class="w-1/2 px-3">
                             <div>
                                 <img class="w-32 h-32 object-contain m-auto"
                                      src="./../../assets/image/server-folder.svg"/>
@@ -262,11 +195,30 @@ const emit = defineEmits({
                                     <template #icon>
                                         <icon-folder/>
                                     </template>
-                                    {{ t('选择模型服务目录') }}
+                                    {{ t('选择本地模型') }}
                                 </a-button>
                             </div>
                             <div class="mt-3 text-sm text-gray-400 rounded-lg">
-                                {{ $t('模型服务目录，包含模型服务的配置文件和模型服务程序文件。' )}}
+                                {{ $t('模型离线运行在本地，对电脑性能有要求') }}
+                            </div>
+                        </div>
+                        <div class="w-1/2 px-3">
+                            <div>
+                                <img class="w-32 h-32 object-contain m-auto"
+                                     src="./../../assets/image/server-file.svg"/>
+                            </div>
+                            <div>
+                                <a-button @click="doSelectFile"
+                                          class="block w-full"
+                                          :loading="loading">
+                                    <template #icon>
+                                        <icon-desktop/>
+                                    </template>
+                                    {{ t('添加云端模型服务') }}
+                                </a-button>
+                            </div>
+                            <div class="mt-3 text-sm text-gray-400 rounded-lg">
+                                {{ $t('模型运行在云端，避免本地资源不足') }}
                             </div>
                         </div>
                     </div>
@@ -300,6 +252,14 @@ const emit = defineEmits({
                                     {{ label }}
                                 </a-tag>
                             </div>
+                        </div>
+                        <div class="flex">
+                            <div class="pr-3 text-right w-20 flex-shrink-0">{{ t('硬件要求') }}</div>
+                            <div>{{ modelInfo.deviceDescription }}</div>
+                        </div>
+                        <div class="flex">
+                            <div class="pr-3 text-right w-20 flex-shrink-0">{{ t('版本要求') }}</div>
+                            <div>{{ modelInfo.serverRequire === '*' ? t('无') : modelInfo.serverRequire }}</div>
                         </div>
                     </div>
                     <div class="pt-4 flex items-center">
