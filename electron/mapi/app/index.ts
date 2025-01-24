@@ -83,23 +83,16 @@ const spawnShell = async (command: string | string[], option: {
     let exitCode = -1
     const stdoutList: string[] = []
     const stderrList: string[] = []
-    const outputStringConvert = (data: any) => {
-        if (option.outputEncoding === 'utf8') {
-            return data.toString()
-        }
-        // convert outputEncoding(cp936) to utf8
-        return iconv.decode(Buffer.from(data, 'binary'), option.outputEncoding)
-    }
     spawnProcess.stdout?.on('data', (data) => {
         // console.log('App.spawnShell.stdout', data)
-        let dataString = outputStringConvert(data)
+        let dataString = outputStringConvert(option.outputEncoding as any, data)
         Log.info('App.spawnShell.stdout', dataString)
         stdoutList.push(dataString)
         option.stdout?.(dataString, spawnProcess)
     })
     spawnProcess.stderr?.on('data', (data) => {
         // console.log('App.spawnShell.stderr', data)
-        let dataString = outputStringConvert(data)
+        let dataString = outputStringConvert(option.outputEncoding as any, data)
         Log.info('App.spawnShell.stderr', dataString)
         stderrList.push(dataString)
         option.stderr?.(dataString, spawnProcess)
@@ -138,10 +131,10 @@ const spawnShell = async (command: string | string[], option: {
                     encoding: 'binary'
                 }, (err, stdout, stderr) => {
                     if (stdout) {
-                        stdout = outputStringConvert(stdout)
+                        stdout = outputStringConvert(option.outputEncoding as any, stdout)
                     }
                     if (stderr) {
-                        stderr = outputStringConvert(stderr)
+                        stderr = outputStringConvert(option.outputEncoding as any, stderr)
                     }
                     Log.info('App.spawnShell.stop.taskkill', JSON.parse(JSON.stringify({err, stdout, stderr})))
                 })
