@@ -161,6 +161,7 @@ export const ServerMuseTalk = {
                 data: resultData
             }
         } catch (e) {
+            console.log('videoGen.error', e)
             throw e
         } finally {
             isRunning = false

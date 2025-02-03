@@ -104,7 +104,10 @@ ipcMain.handle('server:callFunction', async (event, serverInfo: ServerInfo, meth
         return await func.bind(module)(serverInfo, data)
     } catch (e) {
         const error = mapError(e)
-        Log.error('mapi.server.callFunction.error', error)
+        Log.error('mapi.server.callFunction.error', {
+            type: typeof (e),
+            error
+        })
         throw error
     }
 })
