@@ -1,6 +1,6 @@
 import {net} from 'electron'
 import {Client, handle_file} from "@gradio/client";
-import {platformArch, platformName, platformUUID} from "../../lib/env";
+import {isWin, platformArch, platformName, platformUUID} from "../../lib/env";
 import {Events} from "../event/main";
 import {Apps} from "../app";
 import {Files} from "../file/main";
@@ -93,12 +93,66 @@ const requestUrlFileToLocal = async (url, path) => {
     })
 }
 
+const requestEventSource = async (url: string, param: any, option?: {
+    method?: 'POST' | 'GET',
+    headers?: Record<string, string>,
+    onMessage: (data: any) => void,
+    onEnd?: () => void,
+}) => {
+    option = Object.assign({
+        method: 'POST',
+        headers: {},
+        onMessage: (data: any) => {
+            console.log('onMessage', data)
+        },
+        onEnd: () => {
+            console.log('onEnd')
+        }
+    }, option)
+    const response = await fetch(url, {
+        method: option.method,
+        headers: {
+            'Content-Type': 'application/json',
+            ...option.headers,
+        },
+        body: JSON.stringify(param || {}),
+    });
+    if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    while (true) {
+        const {done, value} = await reader.read();
+        if (done) {
+            break;
+        }
+        buffer += decoder.decode(value, {stream: true});
+        const lines = buffer.split("\n");
+        buffer = lines.pop()
+        // console.log('fetchEventSource', JSON.stringify(buffer))
+        for (const line of lines) {
+            // console.log('line', JSON.stringify(line))
+            if (line.startsWith("data: ")) {
+                const data = line.slice(6)
+                if ('[END]' === data) {
+                    option.onEnd()
+                    return;
+                }
+                const eventData = line.slice(6).trim();
+                option.onMessage(JSON.parse(eventData))
+            }
+        }
+    }
+}
+
 const env = async () => {
     const result = {}
     result['AIGCPANEL_SERVER_API_TOKEN'] = await User.getApiToken()
     result['AIGCPANEL_SERVER_API_KEY'] = ''
     result['AIGCPANEL_SERVER_UUID'] = platformUUID()
-    result['AIGCPANEL_SERVER_LAUNCHER'] = 'gui'
+    result['AIGCPANEL_SERVER_LAUNCHER_MODE'] = 'gui'
     return result
 }
 
@@ -113,6 +167,7 @@ export default {
     requestGet,
     requestPostSuccess,
     requestUrlFileToLocal,
+    requestEventSource,
     platformName: platformName(),
     platformArch: platformArch(),
     env,

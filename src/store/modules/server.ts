@@ -132,7 +132,6 @@ export const serverStore = defineStore("server", {
                 }
             })
             const serverInfo = await this.serverInfo(server)
-            serverInfo.logFile = serverRuntime.logFile
             serverInfo.eventChannelName = eventChannel
             await window.$mapi.server.start(serverInfo)
             let pingTimeout = 60 * 5 * 1000
@@ -237,6 +236,10 @@ export const serverStore = defineStore("server", {
                 result.localPath = await window.$mapi.file.fullPath(server.localPath as string)
             } else if (server.type === EnumServerType.LOCAL_DIR) {
                 result.localPath = server.localPath as string
+            }
+            const serverRuntime = getServerRuntime(server)
+            if (serverRuntime) {
+                result.logFile = serverRuntime.logFile
             }
             return result
         }

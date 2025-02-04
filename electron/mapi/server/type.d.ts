@@ -7,3 +7,4 @@ interface ServerInfo {
     },
     logFile: string,
 }
+

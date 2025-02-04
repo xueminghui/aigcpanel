@@ -1,4 +1,5 @@
 import {VersionUtil} from "../lib/util";
+import {ServerApiType} from "../mapi/server/type";
 
 const serverRuntime = {
     port: 0,
@@ -7,8 +8,9 @@ const serverRuntime = {
 let shellController = null
 let isRunning = false
 
+
 export const ServerMuseTalk = {
-    ServerApi: null,
+    ServerApi: null as ServerApiType | null,
     _url() {
         return `http://localhost:${serverRuntime.port}/`
     },
@@ -37,7 +39,8 @@ export const ServerMuseTalk = {
         } else {
             if (VersionUtil.ge(serverInfo.version, '0.2.0')) {
                 command.push(`"${serverInfo.localPath}/launcher"`)
-                env['AIGCPANEL_SERVER_PORT'] = serverRuntime.port
+                command.push(`--env=LAUNCHER_PORT=${serverRuntime.port}`)
+                command.push(`--debug`)
                 const dep = process.platform === 'win32' ? ';' : ':'
                 env['PATH'] = process.env['PATH'] || ''
                 env['PATH'] = `${serverInfo.localPath}/binary${dep}${env['PATH']}`
@@ -51,6 +54,7 @@ export const ServerMuseTalk = {
                 }
             }
         }
+        console.log('command', command)
         shellController = await this.ServerApi.app.spawnShell(command, {
             env,
             cwd: serverInfo.localPath,
@@ -72,7 +76,7 @@ export const ServerMuseTalk = {
     },
     async ping(serverInfo) {
         try {
-            const res = await this.ServerApi.request(`${this._url()}info`)
+            const res = await this.ServerApi.request(`${this._url()}ping`)
             return true
         } catch (e) {
         }
@@ -115,8 +119,13 @@ export const ServerMuseTalk = {
         }
     },
     async videoGen(serverInfo, data) {
-        console.log('videoGen', JSON.stringify(data))
-        const client = await this._client()
+        if (!serverRuntime.port) {
+            serverRuntime.port = 50617
+        }
+        if (!serverInfo.logFile) {
+            serverInfo.logFile = `${serverInfo.localPath}/log-debug.txt`
+        }
+        console.log('videoGen', JSON.stringify({serverInfo, data, serverRuntime}))
         const resultData = {
             // success, querying, retry
             type: 'success',
@@ -138,21 +147,59 @@ export const ServerMuseTalk = {
         isRunning = true
         resultData.start = Date.now()
         try {
-            const payload = []
             if (VersionUtil.ge(serverInfo.version, '0.2.0')) {
-                payload.push(data.videoFile)
-                payload.push(data.soundFile)
+                const configYaml = await this.ServerApi.file.temp('yaml')
+                await this.ServerApi.file.write(configYaml, [
+                    'task_0:',
+                    `  video_path: ${data.videoFile}`,
+                    `  audio_path: ${data.soundFile}`,
+                    `  bbox_shift: ${data.param.box}`,
+                    '',
+                ].join('\n'), {
+                    isFullPath: true
+                })
+                console.log('configYaml', configYaml)
+                let outputFile = ''
+                await this.ServerApi.requestEventSource(`${this._url()}submit`, {
+                    entryPlaceholders: {
+                        'CONFIG': configYaml
+                    },
+                    root: serverInfo.localPath,
+                }, {
+                    onMessage: (data) => {
+                        console.log('onMessage', data)
+                        this.ServerApi.file.appendText(serverInfo.logFile, data)
+                        const match = data.match(/ResultSaveTo:([.\/\w_-]+\.mp4)/);
+                        if (match) {
+                            outputFile = match[1];
+                        }
+                    },
+                    onEnd: () => {
+                        console.log('onEnd')
+                        resultData.end = Date.now()
+                        this.ServerApi.file.appendText(serverInfo.logFile, 'onEnd')
+                    }
+                });
+                if (!outputFile) {
+                    throw new Error('outputFile not found')
+                }
+                const videoUrl = `${this._url()}download/${outputFile}`
+                const videoLocal = await this.ServerApi.file.temp('mp4')
+                await this.ServerApi.requestUrlFileToLocal(videoUrl, videoLocal)
+                console.log('video', {
+                    videoUrl,
+                    videoLocal
+                })
+                resultData.data.filePath = videoLocal
             } else {
+                const client = await this._client()
+                const payload = []
                 payload.push(this.ServerApi.GradioHandleFile(data.videoFile))
                 payload.push(this.ServerApi.GradioHandleFile(data.soundFile))
-            }
-            payload.push(parseInt(data.param.box))
-            const result = await client.predict("/predict", payload);
-            console.log('videoGen.result', JSON.stringify(result))
-            resultData.end = Date.now()
-            if (VersionUtil.ge(serverInfo.version, '0.2.0')) {
-                resultData.data.filePath = result.data[0].value[0].name
-            } else {
+                payload.push(parseInt(data.param.box))
+                const result = await client.predict("/predict", payload);
+                console.log('videoGen.result', JSON.stringify(result))
+                resultData.end = Date.now()
                 resultData.data.filePath = result.data[0].value.video.path
             }
             return {
