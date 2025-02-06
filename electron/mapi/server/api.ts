@@ -110,7 +110,45 @@ const requestEventSource = async (url: string, param: any, option?: {
             console.log('onEnd')
         }
     }, option)
-    const response = await fetch(url, {
+    // return new Promise((resolve, reject) => {
+    //     const req = net.request({
+    //         url,
+    //         method: option.method,
+    //         headers: {
+    //             'Content-Type': 'application/json',
+    //             ...option.headers,
+    //         },
+    //     })
+    //     req.on('response', (response) => {
+    //         console.log('response', response)
+    //         let buffer = ''
+    //         response.on('data', (chunk) => {
+    //             console.log('response.data', chunk)
+    //             buffer += chunk.toString()
+    //             const lines = buffer.split("\n")
+    //             buffer = lines.pop()
+    //             for (const line of lines) {
+    //                 if (line.startsWith("data: ")) {
+    //                     const data = line.slice(6)
+    //                     if ('[END]' === data) {
+    //                         option.onEnd()
+    //                         return;
+    //                     }
+    //                     const eventData = line.slice(6).trim();
+    //                     option.onMessage(EncodeUtil.base64Decode(eventData))
+    //                 }
+    //             }
+    //         })
+    //         response.on('end', () => {
+    //             resolve(undefined)
+    //         })
+    //     })
+    //     req.on('error', (err) => {
+    //         reject(err)
+    //     })
+    //     req.end()
+    // });
+    const response = await net.fetch(url, {
         method: option.method,
         headers: {
             'Content-Type': 'application/json',
