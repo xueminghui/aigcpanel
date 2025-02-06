@@ -40,7 +40,7 @@ export const ServerMuseTalk = {
             if (VersionUtil.ge(serverInfo.version, '0.2.0')) {
                 command.push(`"${serverInfo.localPath}/launcher"`)
                 command.push(`--env=LAUNCHER_PORT=${serverRuntime.port}`)
-                command.push(`--debug`)
+                // command.push(`--debug`)
                 const dep = process.platform === 'win32' ? ';' : ':'
                 env['PATH'] = process.env['PATH'] || ''
                 env['PATH'] = `${serverInfo.localPath}/binary${dep}${env['PATH']}`
