@@ -3,6 +3,7 @@ import {ipcMain} from "electron";
 import {Log} from "../log/main";
 import {mapError} from "./error";
 import {AigcServer} from "../../aigcserver";
+import {ServerInfo} from "./type";
 
 type ServerModule = {
     type: 'buildIn' | 'custom',

@@ -6,6 +6,7 @@ import {Apps} from "../app";
 import {Files} from "../file/main";
 import fs from 'node:fs'
 import User, {UserApi} from "../user/main";
+import {EncodeUtil} from "../../lib/util";
 
 const request = async (url, data?: {}, option?: {}) => {
     option = Object.assign({
@@ -141,7 +142,7 @@ const requestEventSource = async (url: string, param: any, option?: {
                     return;
                 }
                 const eventData = line.slice(6).trim();
-                option.onMessage(JSON.parse(eventData))
+                option.onMessage(EncodeUtil.base64Decode(eventData))
             }
         }
     }
