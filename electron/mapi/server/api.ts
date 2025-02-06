@@ -16,7 +16,7 @@ const request = async (url, data?: {}, option?: {}) => {
             'Content-Type': 'application/json'
         },
         responseType: 'json' as 'json'
-    })
+    }, option)
     if (option['method'] === 'GET') {
         url += '?'
         for (let key in data) {
@@ -49,6 +49,9 @@ const request = async (url, data?: {}, option?: {}) => {
         req.on('error', (err) => {
             reject(err)
         })
+        if (option['method'] === 'POST') {
+            req.write(JSON.stringify(data))
+        }
         req.end()
     })
 }
@@ -195,6 +198,12 @@ const env = async () => {
     return result
 }
 
+const sleep = async (ms) => {
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms)
+    })
+}
+
 export default {
     GradioClient: Client,
     GradioHandleFile: handle_file,
@@ -210,4 +219,7 @@ export default {
     platformName: platformName(),
     platformArch: platformArch(),
     env,
+    sleep,
+    base64Encode: EncodeUtil.base64Encode,
+    base64Decode: EncodeUtil.base64Decode,
 }

@@ -54,7 +54,7 @@ export const ServerMuseTalk = {
                 }
             }
         }
-        console.log('command', command)
+        console.log('command', JSON.stringify(command))
         shellController = await this.ServerApi.app.spawnShell(command, {
             env,
             cwd: serverInfo.localPath,
@@ -160,26 +160,43 @@ export const ServerMuseTalk = {
                 })
                 console.log('configYaml', configYaml)
                 let outputFile = ''
-                await this.ServerApi.requestEventSource(`${this._url()}submit`, {
+                const submitRet = await this.ServerApi.requestPost(`${this._url()}submit`, {
                     entryPlaceholders: {
                         'CONFIG': configYaml
                     },
                     root: serverInfo.localPath,
-                }, {
-                    onMessage: (data) => {
-                        console.log('onMessage', data)
-                        this.ServerApi.file.appendText(serverInfo.logFile, data)
-                        const match = data.match(/ResultSaveTo:([.\/\w_-]+\.mp4)/);
-                        if (match) {
-                            outputFile = match[1];
-                        }
-                    },
-                    onEnd: () => {
-                        console.log('onEnd')
-                        resultData.end = Date.now()
-                        this.ServerApi.file.appendText(serverInfo.logFile, 'onEnd')
+                })
+                console.log('submitRet', JSON.stringify(submitRet))
+                if (submitRet.code) {
+                    throw new Error(`submit ${submitRet.msg}`)
+                }
+                for (let i = 0; i < 3600 * 24 / 5; i++) {
+                    await this.ServerApi.sleep(5000)
+                    const queryRet = await this.ServerApi.requestPost(`${this._url()}query`, {
+                        token: submitRet.data.token
+                    })
+                    console.log('queryRet', JSON.stringify(queryRet))
+                    if (queryRet.code) {
+                        throw new Error(queryRet.msg)
                     }
-                });
+                    let logs = queryRet.data.logs
+                    if (logs) {
+                        logs = this.ServerApi.base64Decode(logs)
+                        if (logs) {
+                            await this.ServerApi.file.appendText(serverInfo.logFile, logs)
+                            const match = logs.match(/ResultSaveTo:([.\/\w_-]+\.mp4)/);
+                            if (match) {
+                                outputFile = match[1];
+                                break
+                            }
+                        }
+                    }
+                    if (queryRet.data.status === 'success') {
+                        resultData.end = Date.now()
+                        await this.ServerApi.file.appendText(serverInfo.logFile, 'success')
+                        break
+                    }
+                }
                 if (!outputFile) {
                     throw new Error('outputFile not found')
                 }
