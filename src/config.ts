@@ -11,7 +11,7 @@ export const AppConfig = {
     websiteGithub: 'https://github.com/modstart-lib/aigcpanel',
     websiteGitee: 'https://gitee.com/modstart-lib/aigcpanel',
     apiBaseUrl: `${BASE_URL}/api`,
-    updaterUrl: `${BASE_URL}/app_manager/updater`,
+    updaterUrl: `${BASE_URL}/app_manager/updater/open`,
     downloadUrl: `${BASE_URL}/app_manager/download`,
     feedbackUrl: `${BASE_URL}/feedback_ticket`,
     statisticsUrl: `${BASE_URL}/app_manager/collect`,
