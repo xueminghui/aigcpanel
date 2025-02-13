@@ -42,6 +42,7 @@ export const Page = {
         })
         const promise = new Promise((resolve, reject) => {
             win.webContents.on("did-finish-load", () => {
+                win.focus()
                 Page.ready(name);
                 DevToolsManager.autoShow(win)
                 resolve(undefined);
