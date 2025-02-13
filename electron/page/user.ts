@@ -12,7 +12,7 @@ export const PageUser = {
         parent?: BrowserWindow,
     }) => {
         option = option || {}
-        let parent = option.parent || null
+        let parent = option.parent || AppRuntime.mainWindow
         let alwaysOnTop = !parent
         const win = new BrowserWindow({
             title: t('用户中心'),
