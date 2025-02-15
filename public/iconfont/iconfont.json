@@ -6,6 +6,20 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "13303112",
+      "name": "cuda",
+      "font_class": "cuda",
+      "unicode": "e63b",
+      "unicode_decimal": 58939
+    },
+    {
+      "icon_id": "22273606",
+      "name": "cpu",
+      "font_class": "cpu",
+      "unicode": "e6e5",
+      "unicode_decimal": 59109
+    },
+    {
       "icon_id": "663540",
       "name": "sound",
       "font_class": "sound",

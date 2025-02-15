@@ -9,6 +9,7 @@ import {TaskChangeType, useTaskStore} from "../../store/modules/task";
 import SoundTtsActionDelete from "../../components/Sound/SoundTtsActionDelete.vue";
 import SoundTtsActionDownload from "../../components/Sound/SoundTtsActionDownload.vue";
 import SoundDuration from "../../components/Sound/SoundDuration.vue";
+import ServerTaskResultParam from "../../components/Server/ServerTaskResultParam.vue";
 
 const records = ref<SoundTtsRecord[]>([])
 const taskStore = useTaskStore()
@@ -72,6 +73,7 @@ const doRefresh = async () => {
                                     <i class="iconfont icon-speed mr-1"></i>
                                     <span class="">x{{ r.param.speed }}</span>
                                 </div>
+                                <ServerTaskResultParam :record="r as any"/>
                             </div>
                             <div class="ml-1">
                                 <SoundDuration :start="r.startTime" :end="r.endTime"/>

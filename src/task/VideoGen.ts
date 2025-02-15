@@ -114,6 +114,12 @@ export const VideoGen: TaskBiz = {
         })
     },
     update: async (bizId, update) => {
+        if ('resultParam' in update) {
+            const record = await VideoGenService.get(bizId as any)
+            if (record) {
+                update.resultParam = Object.assign({}, record.resultParam, update.resultParam)
+            }
+        }
         await VideoGenService.update(bizId as any, update)
     }
 }

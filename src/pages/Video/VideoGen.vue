@@ -10,6 +10,7 @@ import TaskBizStatus from "../../components/common/TaskBizStatus.vue";
 import VideoGenActionDelete from "../../components/Video/VideoGenActionDelete.vue";
 import VideoPlayer from "../../components/common/VideoPlayer.vue";
 import VideoDuration from "../../components/Video/VideoDuration.vue";
+import ServerTaskResultParam from "../../components/Server/ServerTaskResultParam.vue";
 
 const videoTemplateDialog = ref<InstanceType<typeof VideoTemplateDialog> | null>(null)
 const videoGenCreate = ref<InstanceType<typeof VideoGenCreate> | null>(null)
@@ -75,6 +76,7 @@ onBeforeUnmount(() => {
                                     {{ r.serverTitle }}
                                     v{{ r.serverVersion }}
                                 </div>
+                                <ServerTaskResultParam :record="r as any"/>
                             </div>
                             <div class="ml-1">
                                 <VideoDuration :start="r.startTime" :end="r.endTime"/>

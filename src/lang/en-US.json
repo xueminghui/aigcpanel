@@ -223,6 +223,7 @@
     "702bab32": "Are you sure you want to delete the model {title}?",
     "720a177b": "Please select a voice reference",
     "73b1d37a": "Add Online Model",
+    "772cee2e": "CUDA Acceleration",
     "79ccebce": "Add video template",
     "7a8cd45c": "The model runs on the cloud to avoid local resource limitations",
     "7bf1ff1a": "Select video file",

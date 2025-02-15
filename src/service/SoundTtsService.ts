@@ -19,6 +19,7 @@ export type SoundTtsRecord = {
     startTime?: number,
     endTime?: number | undefined,
     resultWav?: string;
+    resultParam?: any;
 
     runtime?: SoundTtsRuntime,
 }
@@ -39,7 +40,8 @@ export const SoundTtsService = {
         return {
             ...record,
             param: JSON.parse(record.param ? record.param : '{}'),
-            jobResult: JSON.parse(record.jobResult ? record.jobResult : '{}')
+            jobResult: JSON.parse(record.jobResult ? record.jobResult : '{}'),
+            resultParam: JSON.parse(record.resultParam ? record.resultParam : '{}')
         } as SoundTtsRecord
     },
     encodeRecord(record: SoundTtsRecord): SoundTtsRecord {
@@ -48,6 +50,9 @@ export const SoundTtsService = {
         }
         if ('jobResult' in record) {
             record.jobResult = JSON.stringify(record.jobResult || {})
+        }
+        if ('resultParam' in record) {
+            record.resultParam = JSON.stringify(record.resultParam || {})
         }
         return record
     },

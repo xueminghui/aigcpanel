@@ -10,6 +10,7 @@ import SoundCloneActionDownload from "../../components/Sound/SoundCloneActionDow
 import SoundCloneActionDelete from "../../components/Sound/SoundCloneActionDelete.vue";
 import TaskBizStatus from "../../components/common/TaskBizStatus.vue";
 import SoundDuration from "../../components/Sound/SoundDuration.vue";
+import ServerTaskResultParam from "../../components/Server/ServerTaskResultParam.vue";
 
 const soundClonePromptDialog = ref<InstanceType<typeof SoundClonePromptDialog>>()
 
@@ -87,6 +88,7 @@ const doRefresh = async () => {
                                     <i class="iconfont icon-global mr-1"></i>
                                     <span class="">{{ $t('跨语种') }}</span>
                                 </div>
+                                <ServerTaskResultParam :record="r as any"/>
                             </div>
                             <div class="ml-1">
                                 <SoundDuration :start="r.startTime" :end="r.endTime"/>

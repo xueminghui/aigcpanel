@@ -1,6 +1,7 @@
 import {TaskBiz} from "../store/modules/task";
 import {useServerStore} from "../store/modules/server";
 import {SoundTtsService} from "../service/SoundTtsService";
+import {result} from "lodash-es";
 
 const serverStore = useServerStore()
 
@@ -95,6 +96,12 @@ export const SoundTts: TaskBiz = {
     },
 
     update: async (bizId, update) => {
+        if ('resultParam' in update) {
+            const record = await SoundTtsService.get(bizId as any)
+            if (record) {
+                update.resultParam = Object.assign({}, record.resultParam, update.resultParam)
+            }
+        }
         await SoundTtsService.update(bizId as any, update)
     }
 }

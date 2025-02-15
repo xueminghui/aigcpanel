@@ -27,6 +27,7 @@ export type VideoGenRecord = {
     startTime?: number,
     endTime?: number | undefined,
     resultMp4?: string;
+    resultParam?: any;
 
     runtime?: VideoGenRuntime,
 }
@@ -47,7 +48,8 @@ export const VideoGenService = {
         return {
             ...record,
             param: JSON.parse(record.param ? record.param : '{}'),
-            jobResult: JSON.parse(record.jobResult ? record.jobResult : '{}')
+            jobResult: JSON.parse(record.jobResult ? record.jobResult : '{}'),
+            resultParam: JSON.parse(record.resultParam ? record.resultParam : '{}')
         } as VideoGenRecord
     },
     encodeRecord(record: VideoGenRecord): VideoGenRecord {
@@ -56,6 +58,9 @@ export const VideoGenService = {
         }
         if ('jobResult' in record) {
             record.jobResult = JSON.stringify(record.jobResult || {})
+        }
+        if ('resultParam' in record) {
+            record.resultParam = JSON.stringify(record.resultParam || {})
         }
         return record
     },

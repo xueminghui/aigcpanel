@@ -104,7 +104,7 @@ export const serverStore = defineStore("server", {
         findRecord(server: ServerRecord) {
             return this.records.find((record) => record.key === server.key)
         },
-        async start(server: ServerRecord) {
+        start: async function (server: ServerRecord) {
             const record = this.findRecord(server)
             if (record?.status === EnumServerStatus.STOPPED || record?.status === EnumServerStatus.ERROR) {
             } else {
@@ -142,10 +142,19 @@ export const serverStore = defineStore("server", {
                                 status: 'running',
                                 startTime: TimeUtil.timestampMS(),
                             }).then(() => {
-                                // taskStore.fireChange({
-                                //     biz,
-                                //     bizId
-                                // } as TaskRecord, 'running')
+                                taskStore.fireChange({
+                                    biz,
+                                    bizId,
+                                } as any, 'running')
+                            })
+                        } else if ('taskParam' === type) {
+                            (tasks[biz] as TaskBiz).update?.(bizId, {
+                                resultParam: data.param,
+                            }).then(() => {
+                                taskStore.fireChange({
+                                    biz,
+                                    bizId,
+                                } as any, 'running')
                             })
                         }
                         break
