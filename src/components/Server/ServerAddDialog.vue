@@ -122,7 +122,7 @@ const doSelectFileDir = async () => {
     if (!serverPath) {
         return
     }
-    if (!/^[a-zA-Z0-9\/:\-\\.]+$/.test(serverPath)) {
+    if (!/^[a-zA-Z0-9\/:\-\\._]+$/.test(serverPath)) {
         Dialog.tipError(t('模型路径不能包含非英文、空格等特殊字符'))
         return
     }

@@ -20,7 +20,7 @@ export type VideoGenRecord = {
 
     param?: any;
 
-    status?: 'queue' | 'running' | 'success' | 'fail';
+    status?: 'queue' | 'wait' | 'running' | 'success' | 'fail';
     statusMsg?: string;
     jobId?: string;
     jobResult?: any;
@@ -75,6 +75,7 @@ export const VideoGenService = {
         const records: VideoGenRecord[] = await window.$mapi.db.select(`SELECT *
                                                                         FROM ${this.tableName()}
                                                                         WHERE status = 'running'
+                                                                           OR status = 'wait'
                                                                            OR status = 'queue'
                                                                         ORDER BY id DESC`)
         // console.log('VideoGenService.restoreForTask', records.length)

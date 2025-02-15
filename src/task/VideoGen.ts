@@ -35,7 +35,7 @@ export const VideoGen: TaskBiz = {
         const serverInfo = await serverStore.serverInfo(server)
         // console.log('VideoGen.runFunc.serverInfo', serverInfo)
         await VideoGenService.update(bizId as any, {
-            status: 'running',
+            status: 'wait',
         })
         const videoTemplateRecord = await VideoTemplateService.get(record.videoTemplateId)
         if (!videoTemplateRecord) {
@@ -54,6 +54,7 @@ export const VideoGen: TaskBiz = {
         }
         let res
         await window.$mapi.server.callFunction(serverInfo, 'videoGen', {
+            id: `VideoGen_${bizId}`,
             videoFile: videoTemplateRecord?.video,
             soundFile: soundFile,
             param: record.param,
@@ -111,5 +112,8 @@ export const VideoGen: TaskBiz = {
             statusMsg: msg,
             endTime: Date.now(),
         })
+    },
+    update: async (bizId, update) => {
+        await VideoGenService.update(bizId as any, update)
     }
 }

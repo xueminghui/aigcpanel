@@ -15,7 +15,7 @@ export type SoundCloneRecord = {
     text: string;
     param?: any;
 
-    status?: 'queue' | 'running' | 'success' | 'fail';
+    status?: 'queue' | 'wait' | 'running' | 'success' | 'fail';
     statusMsg?: string;
     jobId?: string;
     jobResult?: any;
@@ -70,6 +70,7 @@ export const SoundCloneService = {
         const records: SoundCloneRecord[] = await window.$mapi.db.select(`SELECT *
                                                                           FROM ${this.tableName()}
                                                                           WHERE status = 'running'
+                                                                             OR status = 'wait'
                                                                              OR status = 'queue'
                                                                           ORDER BY id DESC`)
         // console.log('SoundCloneService.restoreForTask', records.length)

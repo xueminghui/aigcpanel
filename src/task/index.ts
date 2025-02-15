@@ -6,15 +6,21 @@ import {VideoGen} from "./VideoGen";
 
 const taskStore = useTaskStore()
 
+export const tasks = {
+    SoundTts,
+    SoundClone,
+    VideoGen,
+}
+
 export const TaskManager = {
     init() {
-        taskStore.register('SoundTts', SoundTts)
-        taskStore.register('SoundClone', SoundClone)
-        taskStore.register('VideoGen', VideoGen)
+        for (const k in tasks) {
+            taskStore.register(k, tasks[k])
+        }
         nextTick(async () => {
-            await SoundTts.restore?.()
-            await SoundClone.restore?.()
-            await VideoGen.restore?.()
+            for (const k in tasks) {
+                await tasks[k].restore?.()
+            }
         }).then()
         // taskStore.register('TestSync', TestSync)
         // taskStore.register('TestAsync', TestAsync)

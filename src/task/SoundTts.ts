@@ -32,10 +32,11 @@ export const SoundTts: TaskBiz = {
         const serverInfo = await serverStore.serverInfo(server)
         // console.log('SoundTts.runFunc.serverInfo', serverInfo)
         await SoundTtsService.update(bizId as any, {
-            status: 'running',
+            status: 'wait',
         })
         let res
         await window.$mapi.server.callFunction(serverInfo, 'soundTts', {
+            id: `SoundTts_${bizId}`,
             text: record.text,
             param: record.param,
         }).then(r => {
@@ -91,5 +92,9 @@ export const SoundTts: TaskBiz = {
             statusMsg: msg,
             endTime: Date.now(),
         })
+    },
+
+    update: async (bizId, update) => {
+        await SoundTtsService.update(bizId as any, update)
     }
 }

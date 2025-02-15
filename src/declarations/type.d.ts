@@ -183,7 +183,7 @@ declare interface Window {
                     avatar: string,
                 },
                 data: {},
-                basic:{}
+                basic: {}
             }>,
             refresh: () => Promise<void>,
             getApiToken: () => Promise<string>,
@@ -205,7 +205,14 @@ declare interface Window {
             ping: (serverInfo: ServerInfo) => Promise<boolean>,
             stop: (serverInfo: ServerInfo) => Promise<void>,
             config: (serverInfo: ServerInfo) => Promise<any>,
-            callFunction: (serverInfo: ServerInfo, method: string, data: any) => Promise<any>,
+            callFunction: (
+                serverInfo: ServerInfo,
+                method: string,
+                data: {
+                    id: string,
+                    [key: string]: any
+                }
+            ) => Promise<any>,
         },
     }
 }

@@ -1,5 +1,5 @@
 import {VersionUtil} from "../lib/util";
-import {ServerApiType, ServerInfo} from "../mapi/server/type";
+import {SendType, ServerApiType, ServerContext, ServerFunctionDataType, ServerInfo} from "../mapi/server/type";
 
 const serverRuntime = {
     port: 0,
@@ -8,17 +8,18 @@ const serverRuntime = {
 let shellController = null
 let isRunning = false
 
-export const ServerCosyvoice = {
+export const ServerCosyvoice: ServerContext = {
     ServerApi: null as ServerApiType | null,
     ServerInfo: null as ServerInfo | null,
-    _url() {
+    url() {
         return `http://localhost:${serverRuntime.port}/`
     },
-    async _client() {
-        return await this.ServerApi.GradioClient.connect(this._url());
+    send(type: SendType, data: any) {
+        this.ServerApi.event.sendChannel(this.ServerInfo.eventChannelName, {type, data})
     },
-    _send(serverInfo, type, data) {
-        this.ServerApi.event.sendChannel(serverInfo.eventChannelName, {type, data})
+
+    async _client() {
+        return await this.ServerApi.GradioClient.connect(this.url());
     },
 
     async init(ServerApi) {
@@ -27,7 +28,7 @@ export const ServerCosyvoice = {
     async start(serverInfo) {
         // console.log('this.ServerApi.app.availablePort(50617)', await this.ServerApi.app.availablePort(50617))
         this.ServerInfo = serverInfo
-        this._send(serverInfo, 'starting', serverInfo)
+        this.send('starting', serverInfo)
         let command = []
         if (serverInfo.setting?.['port']) {
             serverRuntime.port = serverInfo.setting.port
@@ -68,11 +69,11 @@ export const ServerCosyvoice = {
                 this.ServerApi.file.appendText(serverInfo.logFile, data)
             },
             success: (data) => {
-                this._send(serverInfo, 'success', serverInfo)
+                this.send('success', serverInfo)
             },
             error: (data, code) => {
                 this.ServerApi.file.appendText(serverInfo.logFile, data)
-                this._send(serverInfo, 'error', serverInfo)
+                this.send('error', serverInfo)
             },
             env,
             cwd: serverInfo.localPath,
@@ -81,7 +82,7 @@ export const ServerCosyvoice = {
     async ping() {
         try {
             if (VersionUtil.ge(this.ServerInfo.version, '0.2.0')) {
-                const res = await this.ServerApi.request(`${this._url()}ping`)
+                const res = await this.ServerApi.request(`${this.url()}ping`)
             } else {
                 const client = await this._client()
                 const result = await client.predict("/change_instruction", {
@@ -94,21 +95,21 @@ export const ServerCosyvoice = {
         return false
     },
     async stop(serverInfo) {
-        this._send(serverInfo, 'stopping', serverInfo)
+        this.send('stopping', serverInfo)
         try {
             shellController.stop()
             shellController = null
         } catch (e) {
             console.log('stop error', e)
         }
-        this._send(serverInfo, 'stopped', serverInfo)
+        this.send('stopped', serverInfo)
     },
     async config() {
         return {
             "code": 0,
             "msg": "ok",
             "data": {
-                "httpUrl": shellController ? this._url() : null,
+                "httpUrl": shellController ? this.url() : null,
                 "functions": {
                     "soundClone": {
                         "param": [
@@ -193,7 +194,7 @@ export const ServerCosyvoice = {
             }
         }
     },
-    async soundTts(serverInfo, data) {
+    async soundTts(serverInfo: ServerInfo, data: ServerFunctionDataType) {
         // soundTts { text: '你好', speaker: '中文女', speed: 1, seed: 0 }
         // console.log('soundTts', data)
         const resultData = {
@@ -217,8 +218,10 @@ export const ServerCosyvoice = {
         isRunning = true
         resultData.start = Date.now()
         try {
+            this.send('taskRunning', {id: data.id})
             if (VersionUtil.ge(serverInfo.version, '0.2.0')) {
                 const configJson = await this.ServerApi.launcherPrepareConfigJson({
+                    id: data.id,
                     mode: 'local',
                     modelConfig: {
                         type: 'tts',
@@ -229,6 +232,7 @@ export const ServerCosyvoice = {
                     }
                 })
                 const result = await this.ServerApi.launcherSubmitAndQuery(this, {
+                    id: data.id,
                     entryPlaceholders: {
                         'CONFIG': configJson
                     },
@@ -267,7 +271,7 @@ export const ServerCosyvoice = {
             isRunning = false
         }
     },
-    async soundClone(serverInfo, data) {
+    async soundClone(serverInfo: ServerInfo, data: ServerFunctionDataType) {
         const resultData = {
             // success, querying, retry
             type: 'success',
@@ -290,8 +294,10 @@ export const ServerCosyvoice = {
         const param = data.param || {}
         resultData.start = Date.now()
         try {
+            this.send('taskRunning', {id: data.id})
             if (VersionUtil.ge(serverInfo.version, '0.2.0')) {
                 const configJson = await this.ServerApi.launcherPrepareConfigJson({
+                    id: data.id,
                     mode: 'local',
                     modelConfig: {
                         type: 'soundClone',
@@ -304,6 +310,7 @@ export const ServerCosyvoice = {
                     }
                 })
                 const result = await this.ServerApi.launcherSubmitAndQuery(this, {
+                    id: data.id,
                     entryPlaceholders: {
                         'CONFIG': configJson
                     },

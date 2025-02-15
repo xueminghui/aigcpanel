@@ -5,8 +5,11 @@ import {computed, ref, toRaw} from "vue";
 import {cloneDeep} from "lodash-es";
 import {ComputedRef} from "@vue/reactivity";
 import {TimeUtil} from "../../lib/util";
+import {tasks} from "../../task";
+import {TaskBiz, useTaskStore} from "./task";
 
 
+const taskStore = useTaskStore()
 const serverRuntime = ref<Map<string, ServerRuntime>>(new Map())
 const createServerStatus = (record: ServerRecord): ComputedRef<EnumServerStatus> => {
     return computed(() => {
@@ -125,9 +128,29 @@ export const serverStore = defineStore("server", {
                         window.__page.destroyChannel(eventChannel)
                         break
                     case 'starting':
+                    case 'stopping':
+                    case 'stopped':
+                        break
+                    case 'taskRunning':
+                    case 'taskParam':
+                    case 'taskResult':
+                        const {id} = data
+                        const [biz, bizId] = id.split('_')
+                        console.log('task', {type, biz, bizId})
+                        if ('taskRunning' === type) {
+                            (tasks[biz] as TaskBiz).update?.(bizId, {
+                                status: 'running',
+                                startTime: TimeUtil.timestampMS(),
+                            }).then(() => {
+                                // taskStore.fireChange({
+                                //     biz,
+                                //     bizId
+                                // } as TaskRecord, 'running')
+                            })
+                        }
                         break
                     default:
-                        console.log('eventChannel', type, data)
+                        console.log('eventChannel.unknown', type, data)
                         break
                 }
             })

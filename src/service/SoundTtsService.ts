@@ -12,7 +12,7 @@ export type SoundTtsRecord = {
     text: string;
     param: any;
 
-    status?: 'queue' | 'running' | 'success' | 'fail';
+    status?: 'queue' | 'wait' | 'running' | 'success' | 'fail';
     statusMsg?: string;
     jobId?: string;
     jobResult?: any;
@@ -67,6 +67,7 @@ export const SoundTtsService = {
         const records: SoundTtsRecord[] = await window.$mapi.db.select(`SELECT *
                                                                         FROM ${this.tableName()}
                                                                         WHERE status = 'running'
+                                                                           OR status = 'wait'
                                                                            OR status = 'queue'
                                                                         ORDER BY id DESC`)
         // console.log('SoundTtsService.restoreForTask', records.length)

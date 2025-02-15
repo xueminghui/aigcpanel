@@ -1,5 +1,5 @@
 import {VersionUtil} from "../lib/util";
-import {ServerApiType, ServerInfo} from "../mapi/server/type";
+import {SendType, ServerApiType, ServerContext, ServerFunctionDataType, ServerInfo} from "../mapi/server/type";
 
 const serverRuntime = {
     port: 0,
@@ -9,25 +9,27 @@ let shellController = null
 let isRunning = false
 
 
-export const ServerMuseTalk = {
+export const ServerMuseTalk: ServerContext = {
     ServerApi: null as ServerApiType | null,
     ServerInfo: null as ServerInfo | null,
-    _url() {
+    url() {
         return `http://localhost:${serverRuntime.port}/`
     },
-    async _client() {
-        return await this.ServerApi.GradioClient.connect(this._url());
+    send(type: SendType, data: any) {
+        this.ServerApi.event.sendChannel(this.ServerInfo.eventChannelName, {type, data})
     },
-    _send(serverInfo, type, data) {
-        this.ServerApi.event.sendChannel(serverInfo.eventChannelName, {type, data})
+
+    async _client() {
+        return await this.ServerApi.GradioClient.connect(this.url());
     },
 
     async init(ServerApi) {
         this.ServerApi = ServerApi;
     },
     async start(serverInfo) {
-        console.log('start', JSON.stringify(serverInfo))
-        this._send(serverInfo, 'starting', serverInfo)
+        // console.log('start', JSON.stringify(serverInfo))
+        this.ServerInfo = serverInfo
+        this.send('starting', serverInfo)
         let command = []
         if (serverInfo.setting?.['port']) {
             serverRuntime.port = serverInfo.setting.port
@@ -66,39 +68,39 @@ export const ServerMuseTalk = {
                 this.ServerApi.file.appendText(serverInfo.logFile, data)
             },
             success: (data) => {
-                this._send(serverInfo, 'success', serverInfo)
+                this.send('success', serverInfo)
             },
             error: (data, code) => {
                 this.ServerApi.file.appendText(serverInfo.logFile, data)
-                this._send(serverInfo, 'error', serverInfo)
+                this.send('error', serverInfo)
             },
 
         })
     },
     async ping() {
         try {
-            const res = await this.ServerApi.request(`${this._url()}ping`)
+            const res = await this.ServerApi.request(`${this.url()}ping`)
             return true
         } catch (e) {
         }
         return false
     },
     async stop(serverInfo) {
-        this._send(serverInfo, 'stopping', serverInfo)
+        this.send(serverInfo, 'stopping', serverInfo)
         try {
             shellController.stop()
             shellController = null
         } catch (e) {
             console.log('stop error', e)
         }
-        this._send(serverInfo, 'stopped', serverInfo)
+        this.send(serverInfo, 'stopped', serverInfo)
     },
     async config() {
         return {
             "code": 0,
             "msg": "ok",
             "data": {
-                "httpUrl": shellController ? this._url() : null,
+                "httpUrl": shellController ? this.url() : null,
                 "functions": {
                     "videoGen": {
                         "param": [
@@ -119,7 +121,7 @@ export const ServerMuseTalk = {
             }
         }
     },
-    async videoGen(serverInfo, data) {
+    async videoGen(serverInfo: ServerInfo, data: ServerFunctionDataType) {
         if (!serverRuntime.port) {
             serverRuntime.port = 50617
         }
@@ -148,6 +150,7 @@ export const ServerMuseTalk = {
         isRunning = true
         resultData.start = Date.now()
         try {
+            this.send('taskRunning', {id: data.id})
             if (VersionUtil.ge(serverInfo.version, '0.2.0')) {
                 const configYaml = await this.ServerApi.file.temp('yaml')
                 await this.ServerApi.file.write(configYaml, [
@@ -161,7 +164,7 @@ export const ServerMuseTalk = {
                 })
                 console.log('configYaml', configYaml)
                 let outputFile = ''
-                const submitRet = await this.ServerApi.requestPost(`${this._url()}submit`, {
+                const submitRet = await this.ServerApi.requestPost(`${this.url()}submit`, {
                     entryPlaceholders: {
                         'CONFIG': configYaml
                     },
@@ -173,7 +176,7 @@ export const ServerMuseTalk = {
                 }
                 for (let i = 0; i < 3600 * 24 / 5; i++) {
                     await this.ServerApi.sleep(5000)
-                    const queryRet = await this.ServerApi.requestPost(`${this._url()}query`, {
+                    const queryRet = await this.ServerApi.requestPost(`${this.url()}query`, {
                         token: submitRet.data.token
                     })
                     console.log('queryRet', JSON.stringify(queryRet))
@@ -201,7 +204,7 @@ export const ServerMuseTalk = {
                 if (!outputFile) {
                     throw new Error('outputFile not found')
                 }
-                const videoUrl = `${this._url()}download/${outputFile}`
+                const videoUrl = `${this.url()}download/${outputFile}`
                 const videoLocal = await this.ServerApi.file.temp('mp4')
                 await this.ServerApi.requestUrlFileToLocal(videoUrl, videoLocal)
                 console.log('video', {

@@ -32,10 +32,11 @@ export const SoundClone: TaskBiz = {
         const serverInfo = await serverStore.serverInfo(server)
         // console.log('runFunc', serverInfo, record)
         await SoundCloneService.update(bizId as any, {
-            status: 'running',
+            status: 'wait',
         })
         let res
         await window.$mapi.server.callFunction(serverInfo, 'soundClone', {
+            id: `SoundClone_${bizId}`,
             text: record.text,
             promptAudio: record.promptWav,
             promptText: record.promptText,
@@ -93,5 +94,8 @@ export const SoundClone: TaskBiz = {
             statusMsg: msg,
             endTime: Date.now(),
         })
+    },
+    update: async (bizId, update) => {
+        await SoundCloneService.update(bizId as any, update)
     }
 }

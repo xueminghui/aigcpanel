@@ -7,7 +7,7 @@ import {Files} from "../file/main";
 import fs from 'node:fs'
 import User, {UserApi} from "../user/main";
 import {EncodeUtil} from "../../lib/util";
-import {ServerContext, ServerInfo} from "./type";
+import {ServerContext, ServerFunctionDataType, ServerInfo} from "./type";
 
 const request = async (url, data?: {}, option?: {}) => {
     option = Object.assign({
@@ -205,13 +205,13 @@ const sleep = async (ms) => {
     })
 }
 
-const launcherSubmitAndQuery = async (context: ServerContext, data: any, option?: {
+const launcherSubmitAndQuery = async (context: ServerContext, data: ServerFunctionDataType, option?: {
     timeout: number,
 }) => {
     option = Object.assign({
         timeout: 24 * 3600,
     }, option)
-    const submitRet = await requestPost(`${context._url()}submit`, data) as any
+    const submitRet = await requestPost(`${context.url()}submit`, data) as any
     console.log('submitRet', JSON.stringify(submitRet))
     if (submitRet.code) {
         throw new Error(`submit ${submitRet.msg}`)
@@ -229,7 +229,7 @@ const launcherSubmitAndQuery = async (context: ServerContext, data: any, option?
             throw new Error('timeout')
         }
         await sleep(5000)
-        const queryRet = await requestPost(`${context._url()}query`, {
+        const queryRet = await requestPost(`${context.url()}query`, {
             token: submitRet.data.token
         }) as any
         console.log('queryRet', JSON.stringify(queryRet))
@@ -241,17 +241,17 @@ const launcherSubmitAndQuery = async (context: ServerContext, data: any, option?
             logs = EncodeUtil.base64Decode(logs)
             if (logs) {
                 await Files.appendText(context.ServerInfo.logFile, logs)
-                const paramMat = logs.match(/AigcPanelRunParam\[(.*?)\]/)
+                const paramMat = logs.match(new RegExp(`AigcPanelRunParam\\[${data.id}\\]\\[(.*?)\\]`))
                 if (paramMat) {
                     const param = JSON.parse(EncodeUtil.base64Decode(paramMat[1]))
                     launcherResult.param = Object.assign(launcherResult.param, param)
-                    console.log('AigcPanelRunParam', param)
+                    context.send('taskParam', {id: data.id, param})
                 }
-                const resultMat = logs.match(/AigcPanelRunResult\[(.*?)\]/)
+                const resultMat = logs.match(new RegExp(`AigcPanelRunResult\\[${data.id}\\]\\[(.*?)\\]`))
                 if (resultMat) {
                     const result = JSON.parse(EncodeUtil.base64Decode(resultMat[1]))
                     launcherResult.data = Object.assign(launcherResult.data, result)
-                    console.log('AigcPanelRunResult', result)
+                    context.send('taskResult', {id: data.id, result})
                 }
             }
         }
