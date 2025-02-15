@@ -113,16 +113,13 @@ let shellController = null
 
 module.exports = {
     ServerApi: null,
+    // 模型启动后的路径
     _url() {
         return `http://localhost:${serverRuntime.port}/`
-    },
-    async _client() {
-        return await this.ServerApi.GradioClient.connect(this._url());
     },
     _send(serverInfo, type, data) {
         this.ServerApi.event.sendChannel(serverInfo.eventChannelName, {type, data})
     },
-
     // 模型初始化
     async init(ServerApi) {
         this.ServerApi = ServerApi;
@@ -140,23 +137,14 @@ module.exports = {
         if (serverInfo.setting?.['startCommand']) {
             command.push(serverInfo.setting.startCommand)
         } else {
+            // 这里是模型启动命令
             //command.push(`"${serverInfo.localPath}/server/main"`)
-            command.push(`"${serverInfo.localPath}/server/.ai/python.exe"`)
-            command.push('-u')
-            command.push(`"${serverInfo.localPath}/server/run.py"`)
-            if (serverInfo.setting?.['gpuMode'] === 'cpu') {
-                command.push('--gpu_mode=cpu')
-            }
         }
         shellController = await this.ServerApi.app.spawnShell(command, {
-            cwd: `${serverInfo.localPath}/server`,
+            cwd: serverInfo.localPath,
             env: {
-                GRADIO_SERVER_PORT: serverRuntime.port,
-                PATH: [
-                    process.env.PATH,
-                    `${serverInfo.localPath}/server`,
-                    `${serverInfo.localPath}/server/.ai/ffmpeg/bin`,
-                ].join(';')
+                AA:11,
+                BB:22
             },
             stdout: (data) => {
                 this.ServerApi.file.appendText(serverInfo.logFile, data)
@@ -176,7 +164,7 @@ module.exports = {
     // 模型启动检测
     async ping(serverInfo) {
         try {
-            const res = await this.ServerApi.request(`${this._url()}info`)
+            // const res = await this.ServerApi.request(`${this._url()}info`)
             return true
         } catch (e) {
         }
@@ -223,7 +211,6 @@ module.exports = {
     // 视频生成
     async videoGen(serverInfo, data) {
         console.log('videoGen', serverInfo, data)
-        const client = await this._client()
         const resultData = {
             // success, querying, retry
             type: 'success',
@@ -235,11 +222,8 @@ module.exports = {
             }
         }
         resultData.start = Date.now()
-        const result = await client.predict("/predict", [
-            this.ServerApi.GradioHandleFile(data.videoFile),
-            this.ServerApi.GradioHandleFile(data.soundFile),
-            parseInt(data.param.box)
-        ]);
+        // 发送生成命令
+        // ...
         // console.log('videoGen.result', JSON.stringify(result))
         resultData.end = Date.now()
         resultData.data.filePath = result.data[0].value.video.path

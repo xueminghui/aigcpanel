@@ -1,4 +1,5 @@
 import {VersionUtil} from "../lib/util";
+import {ServerApiType, ServerInfo} from "../mapi/server/type";
 
 const serverRuntime = {
     port: 0,
@@ -8,7 +9,8 @@ let shellController = null
 let isRunning = false
 
 export const ServerCosyvoice = {
-    ServerApi: null,
+    ServerApi: null as ServerApiType | null,
+    ServerInfo: null as ServerInfo | null,
     _url() {
         return `http://localhost:${serverRuntime.port}/`
     },
@@ -24,6 +26,7 @@ export const ServerCosyvoice = {
     },
     async start(serverInfo) {
         // console.log('this.ServerApi.app.availablePort(50617)', await this.ServerApi.app.availablePort(50617))
+        this.ServerInfo = serverInfo
         this._send(serverInfo, 'starting', serverInfo)
         let command = []
         if (serverInfo.setting?.['port']) {
@@ -35,7 +38,14 @@ export const ServerCosyvoice = {
         if (serverInfo.setting?.['startCommand']) {
             command.push(serverInfo.setting.startCommand)
         } else {
-            if (VersionUtil.ge(serverInfo.version, '0.1.0')) {
+            if (VersionUtil.ge(serverInfo.version, '0.2.0')) {
+                command.push(`"${serverInfo.localPath}/launcher"`)
+                command.push(`--env=LAUNCHER_PORT=${serverRuntime.port}`)
+                // command.push(`--debug`)
+                const dep = process.platform === 'win32' ? ';' : ':'
+                env['PATH'] = process.env['PATH'] || ''
+                env['PATH'] = `${serverInfo.localPath}/binary${dep}${env['PATH']}`
+            } else if (VersionUtil.ge(serverInfo.version, '0.1.0')) {
                 command.push(`"${serverInfo.localPath}/launcher"`)
                 env['AIGCPANEL_SERVER_PORT'] = serverRuntime.port
                 const dep = process.platform === 'win32' ? ';' : ':'
@@ -49,6 +59,7 @@ export const ServerCosyvoice = {
                 }
             }
         }
+        console.log('command', JSON.stringify(command))
         shellController = await this.ServerApi.app.spawnShell(command, {
             stdout: (data) => {
                 this.ServerApi.file.appendText(serverInfo.logFile, data)
@@ -67,12 +78,16 @@ export const ServerCosyvoice = {
             cwd: serverInfo.localPath,
         })
     },
-    async ping(serverInfo) {
+    async ping() {
         try {
-            const client = await this._client()
-            const result = await client.predict("/change_instruction", {
-                mode_checkbox_group: "预训练音色",
-            });
+            if (VersionUtil.ge(this.ServerInfo.version, '0.2.0')) {
+                const res = await this.ServerApi.request(`${this._url()}ping`)
+            } else {
+                const client = await this._client()
+                const result = await client.predict("/change_instruction", {
+                    mode_checkbox_group: "预训练音色",
+                });
+            }
             return true
         } catch (e) {
         }
@@ -181,7 +196,6 @@ export const ServerCosyvoice = {
     async soundTts(serverInfo, data) {
         // soundTts { text: '你好', speaker: '中文女', speed: 1, seed: 0 }
         // console.log('soundTts', data)
-        const client = await this._client()
         const resultData = {
             // success, querying, retry
             type: 'success',
@@ -203,22 +217,45 @@ export const ServerCosyvoice = {
         isRunning = true
         resultData.start = Date.now()
         try {
-            const result = await client.predict("/generate_audio", {
-                mode_checkbox_group: "预训练音色",
-                tts_text: data.text,
-                sft_dropdown: data.param.speaker,
-                prompt_text: "",
-                prompt_wav_upload: null,
-                prompt_wav_record: null,
-                instruct_text: "",
-                seed: parseInt(data.param.seed),
-                stream: "false",
-                speed: parseFloat(data.param.speed),
-            });
-            resultData.end = Date.now()
-            resultData.data.filePath = await this.ServerApi.file.temp('wav')
-            const resultWav = result.data[0].url
-            await this.ServerApi.requestUrlFileToLocal(resultWav, resultData.data.filePath)
+            if (VersionUtil.ge(serverInfo.version, '0.2.0')) {
+                const configJson = await this.ServerApi.launcherPrepareConfigJson({
+                    mode: 'local',
+                    modelConfig: {
+                        type: 'tts',
+                        seed: parseInt(data.param.seed),
+                        speed: parseFloat(data.param.speed),
+                        text: data.text,
+                        speakerId: data.param.speaker,
+                    }
+                })
+                const result = await this.ServerApi.launcherSubmitAndQuery(this, {
+                    entryPlaceholders: {
+                        'CONFIG': configJson
+                    },
+                    root: serverInfo.localPath,
+                })
+                console.log('launcherSubmitAndQuery', result)
+                resultData.end = result.endTime
+                resultData.data.filePath = result.data.url
+            } else {
+                const client = await this._client()
+                const result = await client.predict("/generate_audio", {
+                    mode_checkbox_group: "预训练音色",
+                    tts_text: data.text,
+                    sft_dropdown: data.param.speaker,
+                    prompt_text: "",
+                    prompt_wav_upload: null,
+                    prompt_wav_record: null,
+                    instruct_text: "",
+                    seed: parseInt(data.param.seed),
+                    stream: "false",
+                    speed: parseFloat(data.param.speed),
+                });
+                resultData.end = Date.now()
+                resultData.data.filePath = await this.ServerApi.file.temp('wav')
+                const resultWav = result.data[0].url
+                await this.ServerApi.requestUrlFileToLocal(resultWav, resultData.data.filePath)
+            }
             return {
                 code: 0,
                 msg: 'ok',
@@ -231,9 +268,6 @@ export const ServerCosyvoice = {
         }
     },
     async soundClone(serverInfo, data) {
-        // soundTts { text: '你好', promptAudio: '/path/to/wav.wav', promptText: '文字', speed: 1, seed: 0 }
-        // console.log('soundClone', data)
-        const client = await this._client()
         const resultData = {
             // success, querying, retry
             type: 'success',
@@ -256,23 +290,48 @@ export const ServerCosyvoice = {
         const param = data.param || {}
         resultData.start = Date.now()
         try {
-            const result = await client.predict("/generate_audio", {
-                mode_checkbox_group: param['CrossLingual'] ? "跨语种复刻" : "3s极速复刻",
-                tts_text: data.text,
-                sft_dropdown: "",
-                prompt_text: data.promptText,
-                prompt_wav_upload: this.ServerApi.GradioHandleFile(data.promptAudio),
-                prompt_wav_record: null,
-                instruct_text: "",
-                seed: parseInt(data.param.seed),
-                stream: "false",
-                speed: parseFloat(data.param.speed),
-            });
-            // console.log('soundClone.result', result)
-            resultData.end = Date.now()
-            resultData.data.filePath = await this.ServerApi.file.temp('wav')
-            const resultWav = result.data[0].url
-            await this.ServerApi.requestUrlFileToLocal(resultWav, resultData.data.filePath)
+            if (VersionUtil.ge(serverInfo.version, '0.2.0')) {
+                const configJson = await this.ServerApi.launcherPrepareConfigJson({
+                    mode: 'local',
+                    modelConfig: {
+                        type: 'soundClone',
+                        seed: parseInt(data.param.seed),
+                        speed: parseFloat(data.param.speed),
+                        text: data.text,
+                        promptAudio: data.promptAudio,
+                        promptText: data.promptText,
+                        crossLingual: !!param['CrossLingual'],
+                    }
+                })
+                const result = await this.ServerApi.launcherSubmitAndQuery(this, {
+                    entryPlaceholders: {
+                        'CONFIG': configJson
+                    },
+                    root: serverInfo.localPath,
+                })
+                console.log('launcherSubmitAndQuery', result)
+                resultData.end = result.endTime
+                resultData.data.filePath = result.data.url
+            } else {
+                const client = await this._client()
+                const result = await client.predict("/generate_audio", {
+                    mode_checkbox_group: param['CrossLingual'] ? "跨语种复刻" : "3s极速复刻",
+                    tts_text: data.text,
+                    sft_dropdown: "",
+                    prompt_text: data.promptText,
+                    prompt_wav_upload: this.ServerApi.GradioHandleFile(data.promptAudio),
+                    prompt_wav_record: null,
+                    instruct_text: "",
+                    seed: parseInt(data.param.seed),
+                    stream: "false",
+                    speed: parseFloat(data.param.speed),
+                });
+                // console.log('soundClone.result', result)
+                resultData.end = Date.now()
+                resultData.data.filePath = await this.ServerApi.file.temp('wav')
+                const resultWav = result.data[0].url
+                await this.ServerApi.requestUrlFileToLocal(resultWav, resultData.data.filePath)
+            }
             return {
                 code: 0,
                 msg: 'ok',

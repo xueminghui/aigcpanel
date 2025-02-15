@@ -11,3 +11,8 @@ export type ServerInfo = {
     },
     logFile: string,
 }
+
+export type ServerContext = {
+    _url: () => string,
+    ServerInfo: ServerInfo | null,
+}

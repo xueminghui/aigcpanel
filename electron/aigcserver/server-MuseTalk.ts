@@ -1,5 +1,5 @@
 import {VersionUtil} from "../lib/util";
-import {ServerApiType} from "../mapi/server/type";
+import {ServerApiType, ServerInfo} from "../mapi/server/type";
 
 const serverRuntime = {
     port: 0,
@@ -11,6 +11,7 @@ let isRunning = false
 
 export const ServerMuseTalk = {
     ServerApi: null as ServerApiType | null,
+    ServerInfo: null as ServerInfo | null,
     _url() {
         return `http://localhost:${serverRuntime.port}/`
     },
@@ -74,7 +75,7 @@ export const ServerMuseTalk = {
 
         })
     },
-    async ping(serverInfo) {
+    async ping() {
         try {
             const res = await this.ServerApi.request(`${this._url()}ping`)
             return true

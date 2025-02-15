@@ -7,6 +7,7 @@ import {Files} from "../file/main";
 import fs from 'node:fs'
 import User, {UserApi} from "../user/main";
 import {EncodeUtil} from "../../lib/util";
+import {ServerContext, ServerInfo} from "./type";
 
 const request = async (url, data?: {}, option?: {}) => {
     option = Object.assign({
@@ -204,6 +205,71 @@ const sleep = async (ms) => {
     })
 }
 
+const launcherSubmitAndQuery = async (context: ServerContext, data: any, option?: {
+    timeout: number,
+}) => {
+    option = Object.assign({
+        timeout: 24 * 3600,
+    }, option)
+    const submitRet = await requestPost(`${context._url()}submit`, data) as any
+    console.log('submitRet', JSON.stringify(submitRet))
+    if (submitRet.code) {
+        throw new Error(`submit ${submitRet.msg}`)
+    }
+    const launcherResult = {
+        param: {},
+        data: {
+            url: null,
+        },
+        endTime: null,
+    }
+    const totalWait = Math.ceil(option.timeout / 5)
+    for (let i = 0; i < totalWait; i++) {
+        if (i >= totalWait - 1) {
+            throw new Error('timeout')
+        }
+        await sleep(5000)
+        const queryRet = await requestPost(`${context._url()}query`, {
+            token: submitRet.data.token
+        }) as any
+        console.log('queryRet', JSON.stringify(queryRet))
+        if (queryRet.code) {
+            throw new Error(queryRet.msg)
+        }
+        let logs = queryRet.data.logs
+        if (logs) {
+            logs = EncodeUtil.base64Decode(logs)
+            if (logs) {
+                await Files.appendText(context.ServerInfo.logFile, logs)
+                const paramMat = logs.match(/AigcPanelRunParam\[(.*?)\]/)
+                if (paramMat) {
+                    const param = JSON.parse(EncodeUtil.base64Decode(paramMat[1]))
+                    launcherResult.param = Object.assign(launcherResult.param, param)
+                    console.log('AigcPanelRunParam', param)
+                }
+                const resultMat = logs.match(/AigcPanelRunResult\[(.*?)\]/)
+                if (resultMat) {
+                    const result = JSON.parse(EncodeUtil.base64Decode(resultMat[1]))
+                    launcherResult.data = Object.assign(launcherResult.data, result)
+                    console.log('AigcPanelRunResult', result)
+                }
+            }
+        }
+        if (queryRet.data.status === 'success') {
+            launcherResult.endTime = Date.now()
+            await Files.appendText(context.ServerInfo.logFile, 'success')
+            break
+        }
+    }
+    return launcherResult
+}
+
+const launcherPrepareConfigJson = async (data: any) => {
+    const configJson = await Files.temp('json')
+    await Files.write(configJson, JSON.stringify(data), {isFullPath: true})
+    return configJson
+}
+
 export default {
     GradioClient: Client,
     GradioHandleFile: handle_file,
@@ -222,4 +288,6 @@ export default {
     sleep,
     base64Encode: EncodeUtil.base64Encode,
     base64Decode: EncodeUtil.base64Decode,
+    launcherSubmitAndQuery,
+    launcherPrepareConfigJson,
 }
