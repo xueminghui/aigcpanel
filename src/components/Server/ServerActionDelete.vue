@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {EnumServerStatus, ServerRecord} from "../../types/Server";
+import {EnumServerStatus, EnumServerType, ServerRecord} from "../../types/Server";
 import {Dialog} from "../../lib/dialog";
 import {t} from "../../lang";
 import {sleep} from "../../lib/util";
@@ -28,7 +28,7 @@ const doDelete = async () => {
 <template>
     <a-tooltip :content="$t('删除')">
         <a-button class="mr-2"
-                  :disabled="record.status!==EnumServerStatus.STOPPED&&record.status!==EnumServerStatus.ERROR"
+                  :disabled="record.type===EnumServerType.LOCAL_DIR&&record.status!==EnumServerStatus.STOPPED&&record.status!==EnumServerStatus.ERROR"
                   @click="doDelete()">
             <template #icon>
                 <icon-delete/>

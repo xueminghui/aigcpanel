@@ -21,41 +21,38 @@ export const ServerCosyvoice: ServerContext = {
     async _client() {
         return await this.ServerApi.GradioClient.connect(this.url());
     },
-
-    async init(ServerApi) {
-        this.ServerApi = ServerApi;
+    async init() {
     },
-    async start(serverInfo) {
+    async start() {
         // console.log('this.ServerApi.app.availablePort(50617)', await this.ServerApi.app.availablePort(50617))
-        this.ServerInfo = serverInfo
-        this.send('starting', serverInfo)
+        this.send('starting', this.ServerInfo)
         let command = []
-        if (serverInfo.setting?.['port']) {
-            serverRuntime.port = serverInfo.setting.port
+        if (this.ServerInfo.setting?.['port']) {
+            serverRuntime.port = this.ServerInfo.setting.port
         } else if (!serverRuntime.port || !await this.ServerApi.app.isPortAvailable(serverRuntime.port)) {
             serverRuntime.port = await this.ServerApi.app.availablePort(50617)
         }
         const env = await this.ServerApi.env()
-        if (serverInfo.setting?.['startCommand']) {
-            command.push(serverInfo.setting.startCommand)
+        if (this.ServerInfo.setting?.['startCommand']) {
+            command.push(this.ServerInfo.setting.startCommand)
         } else {
-            if (VersionUtil.ge(serverInfo.version, '0.2.0')) {
-                command.push(`"${serverInfo.localPath}/launcher"`)
+            if (VersionUtil.ge(this.ServerInfo.version, '0.2.0')) {
+                command.push(`"${this.ServerInfo.localPath}/launcher"`)
                 command.push(`--env=LAUNCHER_PORT=${serverRuntime.port}`)
                 // command.push(`--debug`)
                 const dep = process.platform === 'win32' ? ';' : ':'
                 env['PATH'] = process.env['PATH'] || ''
-                env['PATH'] = `${serverInfo.localPath}/binary${dep}${env['PATH']}`
-            } else if (VersionUtil.ge(serverInfo.version, '0.1.0')) {
-                command.push(`"${serverInfo.localPath}/launcher"`)
+                env['PATH'] = `${this.ServerInfo.localPath}/binary${dep}${env['PATH']}`
+            } else if (VersionUtil.ge(this.ServerInfo.version, '0.1.0')) {
+                command.push(`"${this.ServerInfo.localPath}/launcher"`)
                 env['AIGCPANEL_SERVER_PORT'] = serverRuntime.port
                 const dep = process.platform === 'win32' ? ';' : ':'
                 env['PATH'] = process.env['PATH'] || ''
-                env['PATH'] = `${serverInfo.localPath}/binary${dep}${env['PATH']}`
+                env['PATH'] = `${this.ServerInfo.localPath}/binary${dep}${env['PATH']}`
             } else {
-                command.push(`"${serverInfo.localPath}/main"`)
+                command.push(`"${this.ServerInfo.localPath}/main"`)
                 command.push(`--port=${serverRuntime.port}`)
-                if (serverInfo.setting?.['gpuMode'] === 'cpu') {
+                if (this.ServerInfo.setting?.['gpuMode'] === 'cpu') {
                     command.push('--gpu_mode=cpu')
                 }
             }
@@ -63,20 +60,20 @@ export const ServerCosyvoice: ServerContext = {
         console.log('command', JSON.stringify(command))
         shellController = await this.ServerApi.app.spawnShell(command, {
             stdout: (data) => {
-                this.ServerApi.file.appendText(serverInfo.logFile, data)
+                this.ServerApi.file.appendText(this.ServerInfo.logFile, data)
             },
             stderr: (data) => {
-                this.ServerApi.file.appendText(serverInfo.logFile, data)
+                this.ServerApi.file.appendText(this.ServerInfo.logFile, data)
             },
             success: (data) => {
-                this.send('success', serverInfo)
+                this.send('success', this.ServerInfo)
             },
             error: (data, code) => {
-                this.ServerApi.file.appendText(serverInfo.logFile, data)
-                this.send('error', serverInfo)
+                this.ServerApi.file.appendText(this.ServerInfo.logFile, data)
+                this.send('error', this.ServerInfo)
             },
             env,
-            cwd: serverInfo.localPath,
+            cwd: this.ServerInfo.localPath,
         })
     },
     async ping() {
@@ -94,15 +91,15 @@ export const ServerCosyvoice: ServerContext = {
         }
         return false
     },
-    async stop(serverInfo) {
-        this.send('stopping', serverInfo)
+    async stop() {
+        this.send('stopping', this.ServerInfo)
         try {
             shellController.stop()
             shellController = null
         } catch (e) {
             console.log('stop error', e)
         }
-        this.send('stopped', serverInfo)
+        this.send('stopped', this.ServerInfo)
     },
     async config() {
         return {
@@ -238,7 +235,6 @@ export const ServerCosyvoice: ServerContext = {
                     },
                     root: serverInfo.localPath,
                 })
-                console.log('launcherSubmitAndQuery', result)
                 resultData.end = result.endTime
                 resultData.data.filePath = result.data.url
             } else {
@@ -316,7 +312,7 @@ export const ServerCosyvoice: ServerContext = {
                     },
                     root: serverInfo.localPath,
                 })
-                console.log('launcherSubmitAndQuery', result)
+                // console.log('launcherSubmitAndQuery', result)
                 resultData.end = result.endTime
                 resultData.data.filePath = result.data.url
             } else {

@@ -20,6 +20,7 @@ const doOpenLog = async () => {
         <div class="w-20">{{ t('版本') }}</div>
         <div class="flex-grow">
             <div>
+                {{ $t('社区版')}}
                 v{{ AppConfig.version }}
                 Build {{ setting.buildInfo.buildId }}
             </div>

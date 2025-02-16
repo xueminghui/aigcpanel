@@ -13,28 +13,99 @@ const taskStore = useTaskStore()
 const serverRuntime = ref<Map<string, ServerRuntime>>(new Map())
 const createServerStatus = (record: ServerRecord): ComputedRef<EnumServerStatus> => {
     return computed(() => {
+        if (record.type === EnumServerType.CLOUD) {
+            return EnumServerStatus.RUNNING
+        }
         return serverRuntime.value?.get(record.key)?.status || EnumServerStatus.STOPPED
     })
 }
-const createServerRuntime = (record: ServerRecord): ComputedRef<ServerRuntime> => {
+const getServerRuntimeComputedValue = (record: ServerRecord): ComputedRef<ServerRuntime> => {
     return computed(() => {
+        let defaultStatus = EnumServerStatus.STOPPED
+        if (record.type === EnumServerType.CLOUD) {
+            defaultStatus = EnumServerStatus.RUNNING
+        }
         return serverRuntime.value?.get(record.key) || {
-            status: EnumServerStatus.STOPPED,
+            status: defaultStatus,
         } as ServerRuntime
     })
 }
-const getServerRuntime = (record: ServerRecord): ServerRuntime => {
+const getOrCreateServerRuntime = (record: ServerRecord): ServerRuntime => {
     const value = serverRuntime.value?.get(record.key)
     if (value) {
         return value
     }
-    serverRuntime.value?.set(record.key, {
+    const defaultValue = {
         status: EnumServerStatus.STOPPED,
-    } as ServerRuntime)
+        eventChannelName: undefined,
+        logFile: '',
+    } as ServerRuntime
+    if (record.type === EnumServerType.CLOUD) {
+        defaultValue.status = EnumServerStatus.RUNNING
+        defaultValue.eventChannelName = createEventChannel(record, defaultValue)
+        defaultValue.logFile = `logs/${record.name}_${record.version}_${TimeUtil.dateString()}.log`
+    }
+    serverRuntime.value?.set(record.key, defaultValue)
     return serverRuntime.value?.get(record.key) as ServerRuntime
 }
 const deleteServerRuntime = (record: ServerRecord) => {
     serverRuntime.value?.delete(record.key)
+}
+
+const createEventChannel = (server: ServerRecord, serverRuntime?: ServerRuntime) => {
+    if (!serverRuntime) {
+        serverRuntime = getOrCreateServerRuntime(server)
+    }
+    const eventChannel = window.__page.createChannel(function (channelData) {
+        const {type, data} = channelData
+        switch (type) {
+            case 'success':
+                clearTimeout(serverRuntime.pingCheckTimer)
+                serverRuntime.status = EnumServerStatus.STOPPED
+                window.__page.destroyChannel(eventChannel)
+                break
+            case 'error':
+                clearTimeout(serverRuntime.pingCheckTimer)
+                serverRuntime.status = EnumServerStatus.ERROR
+                window.__page.destroyChannel(eventChannel)
+                break
+            case 'starting':
+            case 'stopping':
+            case 'stopped':
+                break
+            case 'taskRunning':
+            case 'taskParam':
+            case 'taskResult':
+                const {id} = data
+                const [biz, bizId] = id.split('_')
+                // console.log('task', {type, biz, bizId, data})
+                if ('taskRunning' === type) {
+                    (tasks[biz] as TaskBiz).update?.(bizId, {
+                        status: 'running',
+                        startTime: TimeUtil.timestampMS(),
+                    }).then(() => {
+                        taskStore.fireChange({
+                            biz,
+                            bizId,
+                        } as any, 'running')
+                    })
+                } else if ('taskParam' === type) {
+                    (tasks[biz] as TaskBiz).update?.(bizId, {
+                        resultParam: data.param,
+                    }).then(() => {
+                        taskStore.fireChange({
+                            biz,
+                            bizId,
+                        } as any, 'running')
+                    })
+                }
+                break
+            default:
+                console.log('eventChannel.unknown', type, data)
+                break
+        }
+    })
+    return eventChannel
 }
 
 export const serverStore = defineStore("server", {
@@ -47,7 +118,7 @@ export const serverStore = defineStore("server", {
                 .then((records) => {
                     records.forEach((record: ServerRecord) => {
                         record.status = createServerStatus(record)
-                        record.runtime = createServerRuntime(record)
+                        record.runtime = getServerRuntimeComputedValue(record)
                     })
                     this.records = records
                 })
@@ -87,7 +158,7 @@ export const serverStore = defineStore("server", {
                 const record = this.records.find((record) => record.key === lr.key)
                 if (!record) {
                     lr.status = createServerStatus(lr)
-                    lr.runtime = createServerRuntime(lr)
+                    lr.runtime = getServerRuntimeComputedValue(lr)
                     this.records.unshift(lr as any)
                     changed = true
                 } else {
@@ -110,61 +181,12 @@ export const serverStore = defineStore("server", {
             } else {
                 throw new Error('StatusError')
             }
-            const serverRuntime = getServerRuntime(server)
+            const serverRuntime = getOrCreateServerRuntime(server)
             serverRuntime.status = EnumServerStatus.STARTING
             serverRuntime.startTimestampMS = TimeUtil.timestampMS()
             serverRuntime.logFile = `logs/${server.name}_${server.version}_${TimeUtil.dateString()}_${serverRuntime.startTimestampMS}.log`
-            const eventChannel = window.__page.createChannel(function (channelData) {
-                const {type, data} = channelData
-                switch (type) {
-                    case 'success':
-                        clearTimeout(serverRuntime.pingCheckTimer)
-                        serverRuntime.status = EnumServerStatus.STOPPED
-                        window.__page.destroyChannel(eventChannel)
-                        break
-                    case 'error':
-                        clearTimeout(serverRuntime.pingCheckTimer)
-                        serverRuntime.status = EnumServerStatus.ERROR
-                        window.__page.destroyChannel(eventChannel)
-                        break
-                    case 'starting':
-                    case 'stopping':
-                    case 'stopped':
-                        break
-                    case 'taskRunning':
-                    case 'taskParam':
-                    case 'taskResult':
-                        const {id} = data
-                        const [biz, bizId] = id.split('_')
-                        console.log('task', {type, biz, bizId})
-                        if ('taskRunning' === type) {
-                            (tasks[biz] as TaskBiz).update?.(bizId, {
-                                status: 'running',
-                                startTime: TimeUtil.timestampMS(),
-                            }).then(() => {
-                                taskStore.fireChange({
-                                    biz,
-                                    bizId,
-                                } as any, 'running')
-                            })
-                        } else if ('taskParam' === type) {
-                            (tasks[biz] as TaskBiz).update?.(bizId, {
-                                resultParam: data.param,
-                            }).then(() => {
-                                taskStore.fireChange({
-                                    biz,
-                                    bizId,
-                                } as any, 'running')
-                            })
-                        }
-                        break
-                    default:
-                        console.log('eventChannel.unknown', type, data)
-                        break
-                }
-            })
+            serverRuntime.eventChannelName = createEventChannel(server)
             const serverInfo = await this.serverInfo(server)
-            serverInfo.eventChannelName = eventChannel
             await window.$mapi.server.start(serverInfo)
             let pingTimeout = 60 * 5 * 1000
             let pingStart = TimeUtil.timestampMS()
@@ -196,7 +218,7 @@ export const serverStore = defineStore("server", {
             } else {
                 throw new Error('StatusError')
             }
-            const serverRuntime = getServerRuntime(server)
+            const serverRuntime = getOrCreateServerRuntime(server)
             serverRuntime.status = EnumServerStatus.STOPPING
             const serverInfo = await this.serverInfo(server)
             serverInfo.logFile = serverRuntime.logFile
@@ -219,7 +241,9 @@ export const serverStore = defineStore("server", {
             if (record.status === EnumServerStatus.STOPPED
                 || record.status === EnumServerStatus.ERROR) {
             } else {
-                throw new Error('StatusError')
+                if (record.type === EnumServerType.LOCAL_DIR) {
+                    throw new Error('StatusError')
+                }
             }
             if (record.type === EnumServerType.LOCAL) {
                 await window.$mapi.file.deletes(record.localPath as string)
@@ -234,7 +258,7 @@ export const serverStore = defineStore("server", {
                 return
             }
             server.status = createServerStatus(server)
-            server.runtime = createServerRuntime(server)
+            server.runtime = getServerRuntimeComputedValue(server)
             this.records.unshift(server)
             await this.sync()
         },
@@ -263,15 +287,19 @@ export const serverStore = defineStore("server", {
                 setting: toRaw(server.setting),
                 logFile: '',
                 eventChannelName: '',
+                config: JSON.parse(JSON.stringify(server)),
             }
             if (server.type === EnumServerType.LOCAL) {
                 result.localPath = await window.$mapi.file.fullPath(server.localPath as string)
             } else if (server.type === EnumServerType.LOCAL_DIR) {
                 result.localPath = server.localPath as string
+            } else if (server.type === EnumServerType.CLOUD) {
+                result.localPath = server.localPath as string
             }
-            const serverRuntime = getServerRuntime(server)
+            const serverRuntime = getOrCreateServerRuntime(server)
             if (serverRuntime) {
                 result.logFile = serverRuntime.logFile
+                result.eventChannelName = serverRuntime.eventChannelName as string
             }
             return result
         }

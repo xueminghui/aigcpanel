@@ -212,7 +212,7 @@ const launcherSubmitAndQuery = async (context: ServerContext, data: ServerFuncti
         timeout: 24 * 3600,
     }, option)
     const submitRet = await requestPost(`${context.url()}submit`, data) as any
-    console.log('submitRet', JSON.stringify(submitRet))
+    // console.log('submitRet', JSON.stringify(submitRet))
     if (submitRet.code) {
         throw new Error(`submit ${submitRet.msg}`)
     }
@@ -232,7 +232,7 @@ const launcherSubmitAndQuery = async (context: ServerContext, data: ServerFuncti
         const queryRet = await requestPost(`${context.url()}query`, {
             token: submitRet.data.token
         }) as any
-        console.log('queryRet', JSON.stringify(queryRet))
+        // console.log('queryRet', JSON.stringify(queryRet))
         if (queryRet.code) {
             throw new Error(queryRet.msg)
         }

@@ -1,4 +1,5 @@
 import {ipcRenderer} from 'electron'
+import {ServerInfo} from "./type";
 
 const start = async (serverInfo: ServerInfo) => {
     return ipcRenderer.invoke('server:start', serverInfo)

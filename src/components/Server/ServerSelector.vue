@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {useServerStore} from "../../store/modules/server";
-import {EnumServerStatus} from "../../types/Server";
+import {EnumServerStatus, EnumServerType} from "../../types/Server";
 import {computed, onMounted, ref, watch} from "vue";
 
 const serverStore = useServerStore()
@@ -9,28 +9,12 @@ const select = ref<any>(null)
 const props = defineProps<{
     functionName: string
 }>()
-const valueStatus = ref(EnumServerStatus.STOPPED)
-
 const recordsFilter = computed(() => {
-    const records = serverStore.records.filter(s => s.functions.includes(props.functionName))
-    if (records.length === 0) {
-        valueStatus.value = EnumServerStatus.STOPPED
-    }
-    return records
+    return serverStore.records.filter(s => s.functions.includes(props.functionName))
 })
-
-onMounted(() => {
-    watch(() => select.value.modelValue, async (value) => {
-        const server = await serverStore.getByKey(value)
-        if (server) {
-            valueStatus.value = server.status
-        } else {
-            valueStatus.value = EnumServerStatus.STOPPED
-        }
-    })
+const valueStatus = computed(() => {
+    return serverStore.records.find(s => s.key === select.value.modelValue)?.status || EnumServerStatus.STOPPED
 })
-
-
 </script>
 
 <template>
@@ -43,6 +27,7 @@ onMounted(() => {
                      class="w-2 h-2 bg-green-700 rounded-full mr-1 flex-shrink-0"></div>
                 <div v-else class="w-2 h-2 bg-red-700 rounded-full mr-1 flex-shrink-0"></div>
                 <div class="text-xs flex-grow">
+                    {{ server.type === EnumServerType.CLOUD ? '[' + $t('云端') + ']' : '' }}
                     {{ server.title }}
                     v{{ server.version }}
                 </div>

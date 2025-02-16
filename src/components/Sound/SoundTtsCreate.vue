@@ -98,7 +98,7 @@ const emit = defineEmits({
                     </template>
                 </a-popover>
             </div>
-            <div class="mr-3 w-64 flex-shrink-0">
+            <div class="mr-3 w-96 flex-shrink-0">
                 <ServerSelector v-model="formData.serverKey" functionName="soundTts"/>
             </div>
         </div>

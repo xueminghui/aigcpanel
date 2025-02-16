@@ -17,6 +17,7 @@ export const AppConfig = {
     statisticsUrl: `${BASE_URL}/app_manager/collect`,
     guideUrl: `${BASE_URL}/app_manager/guide`,
     helpUrl: `${BASE_URL}/app_manager/help`,
+    serverUrl: `${BASE_URL}/aigcpanel/`,
     basic: {
         userEnable: false,
     },

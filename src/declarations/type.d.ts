@@ -202,8 +202,8 @@ declare interface Window {
         },
         server: {
             start: (serverInfo: ServerInfo) => Promise<void>,
-            ping: (serverInfo: ServerInfo) => Promise<boolean>,
             stop: (serverInfo: ServerInfo) => Promise<void>,
+            ping: (serverInfo: ServerInfo) => Promise<boolean>,
             config: (serverInfo: ServerInfo) => Promise<any>,
             callFunction: (
                 serverInfo: ServerInfo,

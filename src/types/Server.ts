@@ -9,7 +9,7 @@ export enum EnumServerStatus {
 export enum EnumServerType {
     LOCAL = 'local',
     LOCAL_DIR = 'localDir',
-    REMOTE = 'remote',
+    CLOUD = 'cloud',
 }
 
 export type ServerRecord = {
@@ -31,9 +31,10 @@ export type ServerRecord = {
             label: string,
         }[]
     }[]
-    setting: {
+    setting?: {
         [key: string]: any,
     },
+    cloudConfig?: any,
     status?: any,
     runtime?: any,
 }
@@ -45,6 +46,7 @@ export type ServerRuntime = {
     logFile: string,
     pingCheckTimer?: any,
     startTimestampMS?: number,
+    eventChannelName?: string,
 }
 
 

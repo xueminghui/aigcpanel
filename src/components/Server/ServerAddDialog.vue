@@ -9,6 +9,8 @@ import {useServerStore} from "../../store/modules/server";
 import {VersionUtil} from "../../lib/util";
 import {AppConfig} from "../../config";
 
+const cloudDialog = ref<InstanceType<typeof ServerCloudDialog>>()
+
 const serverStore = useServerStore()
 const visible = ref(false)
 const loading = ref(false)
@@ -155,12 +157,12 @@ const doSelectFileDir = async () => {
     loading.value = false
 }
 
-const doSelectFile = async () => {
-    Dialog.tipError(t('敬请期待'))
+const doSelectCloud = async () => {
+    Dialog.tipError(t('请升级Pro版使用'))
 }
 defineExpose({
     show,
-    doSelectFile
+    doSelectCloud
 })
 
 const emit = defineEmits({
@@ -180,7 +182,7 @@ const emit = defineEmits({
             {{ $t('添加模型服务') }}
         </template>
         <div>
-            <div class="">
+            <div class="select-none">
                 <div v-if="!modelInfo.name">
                     <div class="flex">
                         <div class="w-1/2 px-3">
@@ -208,7 +210,7 @@ const emit = defineEmits({
                                      src="./../../assets/image/server-file.svg"/>
                             </div>
                             <div>
-                                <a-button @click="doSelectFile"
+                                <a-button @click="doSelectCloud"
                                           class="block w-full"
                                           :loading="loading">
                                     <template #icon>

@@ -3,39 +3,35 @@ import {ipcMain} from "electron";
 import {Log} from "../log/main";
 import {mapError} from "./error";
 import {AigcServer} from "../../aigcserver";
-import {ServerInfo} from "./type";
-
-type ServerModule = {
-    type: 'buildIn' | 'custom',
-    init: (api: typeof ServerApi) => Promise<any>,
-    start: (serverInfo: ServerInfo) => Promise<any>,
-    stop: (serverInfo: ServerInfo) => Promise<any>,
-    ping: () => Promise<boolean>,
-    config: () => Promise<any>,
-}
+import {ServerContext, ServerInfo} from "./type";
 
 const serverModule: {
-    [key: string]: ServerModule
+    [key: string]: ServerContext
 } = {}
 
 const init = () => {
 
 }
 
-const getModule = async (serverInfo: ServerInfo): Promise<ServerModule> => {
+const getModule = async (serverInfo: ServerInfo): Promise<ServerContext> => {
     if (!serverModule[serverInfo.localPath]) {
         try {
-            if (serverInfo.name in AigcServer) {
-                const server = AigcServer[serverInfo.name]
-                await server.init(ServerApi)
+            let mapName = serverInfo.name
+            if (mapName.startsWith('Cloud')) {
+                mapName = 'Cloud'
+            }
+            if (mapName in AigcServer) {
+                const server = AigcServer[mapName] as ServerContext
                 server.type = 'buildIn'
+                server.ServerApi = ServerApi
+                await server.init()
                 serverModule[serverInfo.localPath] = server
             } else {
                 const serverPath = `${serverInfo.localPath}/server.js`
                 const module = await import(`file://${serverPath}`)
-                // console.log('module', module)
-                await module.default.init(ServerApi)
                 module.default.type = 'custom'
+                module.default.ServerApi = ServerApi
+                await module.default.init()
                 serverModule[serverInfo.localPath] = module.default
             }
         } catch (e) {
@@ -45,13 +41,14 @@ const getModule = async (serverInfo: ServerInfo): Promise<ServerModule> => {
         }
     }
     // console.log('getModule', serverInfo, serverModule[serverInfo.localPath])
+    serverModule[serverInfo.localPath].ServerInfo = serverInfo
     return serverModule[serverInfo.localPath]
 }
 
 ipcMain.handle('server:start', async (event, serverInfo: ServerInfo) => {
     const module = await getModule(serverInfo)
     try {
-        return await module.start(serverInfo)
+        return await module.start()
     } catch (e) {
         const error = mapError(e)
         Log.error('mapi.server.start.error', error)
@@ -74,7 +71,7 @@ ipcMain.handle('server:ping', async (event, serverInfo: ServerInfo) => {
 ipcMain.handle('server:stop', async (event, serverInfo: ServerInfo) => {
     const module = await getModule(serverInfo)
     try {
-        return await module.stop(serverInfo)
+        return await module.stop()
     } catch (e) {
         const error = mapError(e)
         Log.error('mapi.server.stop.error', error)

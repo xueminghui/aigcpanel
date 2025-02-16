@@ -27,7 +27,7 @@ export const SoundClone: TaskBiz = {
     },
 
     runFunc: async (bizId, bizParam) => {
-        console.log('SoundClone.runFunc', {bizId, bizParam})
+        // console.log('SoundClone.runFunc', {bizId, bizParam})
         const {record, server} = await prepareData(bizId, bizParam)
         const serverInfo = await serverStore.serverInfo(server)
         // console.log('runFunc', serverInfo, record)

@@ -23,12 +23,22 @@ export type ServerInfo = {
     },
     logFile: string,
     eventChannelName: string,
+    config: any,
 }
 
 export type ServerContext = {
-    url: () => string,
-    send: (type: SendType, data: any) => void,
+    ServerApi: ServerApiType | null,
     ServerInfo: ServerInfo | null,
+
+    send: (type: SendType, data: any) => void,
+
+    init: () => Promise<void>,
+    start: () => Promise<void>,
+    stop: () => Promise<void>,
+    url: () => string,
+    ping: () => Promise<boolean>,
+    config: () => Promise<any>,
+
     [key: string]: any,
 }
 

@@ -32,8 +32,8 @@ const typeName = (type: string) => {
         return t('本地模型')
     } else if (EnumServerType.LOCAL_DIR === type) {
         return t('本地模型目录')
-    } else if (EnumServerType.REMOTE === type) {
-        return t('线上模型')
+    } else if (EnumServerType.CLOUD === type) {
+        return t('云端模型')
     }
 }
 
@@ -59,7 +59,7 @@ const typeName = (type: string) => {
                     <template #icon>
                         <icon-apps/>
                     </template>
-                    {{ $t('添加线上模型') }}
+                    {{ $t('添加云端模型') }}
                 </a-button>
             </div>
         </div>
@@ -83,7 +83,7 @@ const typeName = (type: string) => {
                         <template #icon>
                             <icon-apps/>
                         </template>
-                        {{ $t('添加线上模型') }}
+                        {{ $t('添加云端模型') }}
                     </a-button>
                     <a-button class="mx-1" @click="helpShow=true">
                         <template #icon>
@@ -115,7 +115,7 @@ const typeName = (type: string) => {
                                 <div class="inline-block mr-4">
                                     <a-tooltip :content="typeName(record.type as string)">
                                         <div class="inline-block">
-                                            <i v-if="record.type===EnumServerType.REMOTE"
+                                            <i v-if="record.type===EnumServerType.CLOUD"
                                                class="iconfont icon-network"></i>
                                             <i v-else-if="record.type===EnumServerType.LOCAL"
                                                class="iconfont icon-desktop"></i>
@@ -144,11 +144,13 @@ const typeName = (type: string) => {
                         </div>
                         <div class="pt-4 flex items-center">
                             <div class="flex-grow">
-                                <ServerActionStartStop :record="record"/>
+                                <ServerActionStartStop v-if="record.type===EnumServerType.LOCAL_DIR"
+                                                       :record="record"/>
                                 <ServerActionLog :record="record"/>
                                 <ServerActionDelete :record="record" @update="doRefresh"/>
                                 <ServerActionInfo :record="record"/>
-                                <ServerActionSetting :record="record"/>
+                                <ServerActionSetting v-if="record.settings && Object.keys(record.settings).length>0"
+                                                     :record="record"/>
                             </div>
                             <div>
                                 <ServerStartTime :record="record"/>

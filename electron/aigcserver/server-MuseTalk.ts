@@ -18,41 +18,36 @@ export const ServerMuseTalk: ServerContext = {
     send(type: SendType, data: any) {
         this.ServerApi.event.sendChannel(this.ServerInfo.eventChannelName, {type, data})
     },
-
     async _client() {
         return await this.ServerApi.GradioClient.connect(this.url());
     },
-
-    async init(ServerApi) {
-        this.ServerApi = ServerApi;
+    async init() {
     },
-    async start(serverInfo) {
-        // console.log('start', JSON.stringify(serverInfo))
-        this.ServerInfo = serverInfo
-        this.send('starting', serverInfo)
+    async start() {
+        this.send('starting', this.ServerInfo)
         let command = []
-        if (serverInfo.setting?.['port']) {
-            serverRuntime.port = serverInfo.setting.port
+        if (this.ServerInfo.setting?.['port']) {
+            serverRuntime.port = this.ServerInfo.setting.port
         } else if (!serverRuntime.port || !await this.ServerApi.app.isPortAvailable(serverRuntime.port)) {
             serverRuntime.port = await this.ServerApi.app.availablePort(50617)
         }
         const env = await this.ServerApi.env()
-        if (serverInfo.setting?.['startCommand']) {
-            command.push(serverInfo.setting.startCommand)
+        if (this.ServerInfo.setting?.['startCommand']) {
+            command.push(this.ServerInfo.setting.startCommand)
         } else {
-            if (VersionUtil.ge(serverInfo.version, '0.2.0')) {
-                command.push(`"${serverInfo.localPath}/launcher"`)
+            if (VersionUtil.ge(this.ServerInfo.version, '0.2.0')) {
+                command.push(`"${this.ServerInfo.localPath}/launcher"`)
                 command.push(`--env=LAUNCHER_PORT=${serverRuntime.port}`)
                 // command.push(`--debug`)
                 const dep = process.platform === 'win32' ? ';' : ':'
                 env['PATH'] = process.env['PATH'] || ''
-                env['PATH'] = `${serverInfo.localPath}/binary${dep}${env['PATH']}`
+                env['PATH'] = `${this.ServerInfo.localPath}/binary${dep}${env['PATH']}`
             } else {
                 //command.push(`"${serverInfo.localPath}/server/main"`)
-                command.push(`"${serverInfo.localPath}/server/.ai/python.exe"`)
+                command.push(`"${this.ServerInfo.localPath}/server/.ai/python.exe"`)
                 command.push('-u')
-                command.push(`"${serverInfo.localPath}/server/run.py"`)
-                if (serverInfo.setting?.['gpuMode'] === 'cpu') {
+                command.push(`"${this.ServerInfo.localPath}/server/run.py"`)
+                if (this.ServerInfo.setting?.['gpuMode'] === 'cpu') {
                     command.push('--gpu_mode=cpu')
                 }
             }
@@ -60,19 +55,19 @@ export const ServerMuseTalk: ServerContext = {
         console.log('command', JSON.stringify(command))
         shellController = await this.ServerApi.app.spawnShell(command, {
             env,
-            cwd: serverInfo.localPath,
+            cwd: this.ServerInfo.localPath,
             stdout: (data) => {
-                this.ServerApi.file.appendText(serverInfo.logFile, data)
+                this.ServerApi.file.appendText(this.ServerInfo.logFile, data)
             },
             stderr: (data) => {
-                this.ServerApi.file.appendText(serverInfo.logFile, data)
+                this.ServerApi.file.appendText(this.ServerInfo.logFile, data)
             },
             success: (data) => {
-                this.send('success', serverInfo)
+                this.send('success', this.ServerInfo)
             },
             error: (data, code) => {
-                this.ServerApi.file.appendText(serverInfo.logFile, data)
-                this.send('error', serverInfo)
+                this.ServerApi.file.appendText(this.ServerInfo.logFile, data)
+                this.send('error', this.ServerInfo)
             },
 
         })
@@ -85,15 +80,15 @@ export const ServerMuseTalk: ServerContext = {
         }
         return false
     },
-    async stop(serverInfo) {
-        this.send(serverInfo, 'stopping', serverInfo)
+    async stop() {
+        this.send('stopping', this.ServerInfo)
         try {
             shellController.stop()
             shellController = null
         } catch (e) {
             console.log('stop error', e)
         }
-        this.send(serverInfo, 'stopped', serverInfo)
+        this.send('stopped', this.ServerInfo)
     },
     async config() {
         return {

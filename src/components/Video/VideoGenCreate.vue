@@ -159,7 +159,7 @@ defineExpose({
                     {{ $t('模型') }}
                 </a-tooltip>
             </div>
-            <div class="mr-3 w-56 flex-shrink-0">
+            <div class="mr-3 w-96 flex-shrink-0">
                 <ServerSelector v-model="formData.serverKey" functionName="videoGen"/>
             </div>
         </div>
