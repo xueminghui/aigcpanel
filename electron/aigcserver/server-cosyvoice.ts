@@ -191,7 +191,7 @@ export const ServerCosyvoice: ServerContext = {
             }
         }
     },
-    async soundTts(serverInfo: ServerInfo, data: ServerFunctionDataType) {
+    async soundTts(data: ServerFunctionDataType) {
         // soundTts { text: '你好', speaker: '中文女', speed: 1, seed: 0 }
         // console.log('soundTts', data)
         const resultData = {
@@ -216,7 +216,7 @@ export const ServerCosyvoice: ServerContext = {
         resultData.start = Date.now()
         try {
             this.send('taskRunning', {id: data.id})
-            if (VersionUtil.ge(serverInfo.version, '0.2.0')) {
+            if (VersionUtil.ge(this.ServerInfo.version, '0.2.0')) {
                 const configJson = await this.ServerApi.launcherPrepareConfigJson({
                     id: data.id,
                     mode: 'local',
@@ -233,7 +233,7 @@ export const ServerCosyvoice: ServerContext = {
                     entryPlaceholders: {
                         'CONFIG': configJson
                     },
-                    root: serverInfo.localPath,
+                    root: this.ServerInfo.localPath,
                 })
                 resultData.end = result.endTime
                 resultData.data.filePath = result.data.url
@@ -267,7 +267,7 @@ export const ServerCosyvoice: ServerContext = {
             isRunning = false
         }
     },
-    async soundClone(serverInfo: ServerInfo, data: ServerFunctionDataType) {
+    async soundClone(data: ServerFunctionDataType) {
         const resultData = {
             // success, querying, retry
             type: 'success',
@@ -291,7 +291,7 @@ export const ServerCosyvoice: ServerContext = {
         resultData.start = Date.now()
         try {
             this.send('taskRunning', {id: data.id})
-            if (VersionUtil.ge(serverInfo.version, '0.2.0')) {
+            if (VersionUtil.ge(this.ServerInfo.version, '0.2.0')) {
                 const configJson = await this.ServerApi.launcherPrepareConfigJson({
                     id: data.id,
                     mode: 'local',
@@ -310,7 +310,7 @@ export const ServerCosyvoice: ServerContext = {
                     entryPlaceholders: {
                         'CONFIG': configJson
                     },
-                    root: serverInfo.localPath,
+                    root: this.ServerInfo.localPath,
                 })
                 // console.log('launcherSubmitAndQuery', result)
                 resultData.end = result.endTime

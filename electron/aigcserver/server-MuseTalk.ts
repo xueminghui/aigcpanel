@@ -116,14 +116,13 @@ export const ServerMuseTalk: ServerContext = {
             }
         }
     },
-    async videoGen(serverInfo: ServerInfo, data: ServerFunctionDataType) {
+    async videoGen(data: ServerFunctionDataType) {
         if (!serverRuntime.port) {
             serverRuntime.port = 50617
         }
-        if (!serverInfo.logFile) {
-            serverInfo.logFile = `${serverInfo.localPath}/log-debug.txt`
+        if (!this.ServerInfo.logFile) {
+            this.ServerInfo.logFile = `${this.ServerInfo.localPath}/log-debug.txt`
         }
-        console.log('videoGen', JSON.stringify({serverInfo, data, serverRuntime}))
         const resultData = {
             // success, querying, retry
             type: 'success',
@@ -146,7 +145,7 @@ export const ServerMuseTalk: ServerContext = {
         resultData.start = Date.now()
         try {
             this.send('taskRunning', {id: data.id})
-            if (VersionUtil.ge(serverInfo.version, '0.2.0')) {
+            if (VersionUtil.ge(this.ServerInfo.version, '0.2.0')) {
                 const configYaml = await this.ServerApi.file.temp('yaml')
                 await this.ServerApi.file.write(configYaml, [
                     'task_0:',
@@ -163,7 +162,7 @@ export const ServerMuseTalk: ServerContext = {
                     entryPlaceholders: {
                         'CONFIG': configYaml
                     },
-                    root: serverInfo.localPath,
+                    root: this.ServerInfo.localPath,
                 })
                 console.log('submitRet', JSON.stringify(submitRet))
                 if (submitRet.code) {
@@ -182,7 +181,7 @@ export const ServerMuseTalk: ServerContext = {
                     if (logs) {
                         logs = this.ServerApi.base64Decode(logs)
                         if (logs) {
-                            await this.ServerApi.file.appendText(serverInfo.logFile, logs)
+                            await this.ServerApi.file.appendText(this.ServerInfo.logFile, logs)
                             const match = logs.match(/ResultSaveTo:([.\/\w_-]+\.mp4)/);
                             if (match) {
                                 outputFile = match[1];
@@ -192,7 +191,7 @@ export const ServerMuseTalk: ServerContext = {
                     }
                     if (queryRet.data.status === 'success') {
                         resultData.end = Date.now()
-                        await this.ServerApi.file.appendText(serverInfo.logFile, 'success')
+                        await this.ServerApi.file.appendText(this.ServerInfo.logFile, 'success')
                         break
                     }
                 }

@@ -28,6 +28,7 @@ onMounted(() => {
                 </div>
                 <div class="p-2 flex-grow">
                     {{ AppConfig.name }}
+                    {{ $t('社区版') }}
                 </div>
             </div>
             <div class="p-1 leading-4">
