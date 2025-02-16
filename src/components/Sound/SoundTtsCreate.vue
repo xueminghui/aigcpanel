@@ -10,6 +10,7 @@ import {mapError} from "../../lib/error";
 import {t} from "../../lang";
 import {EnumServerStatus} from "../../types/Server";
 import ParamForm from "../common/ParamForm.vue";
+import {PermissionService} from "../../service/PermissionService";
 
 const paramForm = ref<InstanceType<typeof ParamForm> | null>(null)
 const serverStore = useServerStore()
@@ -72,6 +73,9 @@ const doSubmit = async () => {
         serverVersion: server.version,
         text: formData.value.text,
         param: formData.value.param,
+    }
+    if (!await PermissionService.checkForTask('SoundTts', record)) {
+        return
     }
     const id = await SoundTtsService.submit(record)
     formData.value.text = ''

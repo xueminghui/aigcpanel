@@ -11,6 +11,7 @@ import {t} from "../../lang";
 import {EnumServerStatus} from "../../types/Server";
 import ParamForm from "../common/ParamForm.vue";
 import {mapError} from "../../lib/error";
+import {PermissionService} from "../../service/PermissionService";
 
 const paramForm = ref<InstanceType<typeof ParamForm> | null>(null)
 const soundClonePromptStore = useSoundClonePromptStore()
@@ -88,6 +89,9 @@ const doSubmit = async () => {
         promptText: prompt.promptText,
         text: formData.value.text,
         param: formData.value.param,
+    }
+    if (!await PermissionService.checkForTask('SoundClone', record)) {
+        return
     }
     const id = await SoundCloneService.submit(record)
     formData.value.text = ''

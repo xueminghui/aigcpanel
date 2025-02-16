@@ -13,6 +13,7 @@ import {EnumServerStatus} from "../../types/Server";
 import {VideoGenRecord, VideoGenService} from "../../service/VideoGenService";
 import ParamForm from "../common/ParamForm.vue";
 import {mapError} from "../../lib/error";
+import {PermissionService} from "../../service/PermissionService";
 
 const serverStore = useServerStore()
 const paramForm = ref<InstanceType<typeof ParamForm> | null>(null)
@@ -128,6 +129,9 @@ const doSubmit = async () => {
         soundCloneId: formData.value.soundCloneId,
         soundCloneText: soundCloneRecord ? soundCloneRecord.text : '',
         param: formData.value.param,
+    }
+    if (!await PermissionService.checkForTask('VideoGen', record)) {
+        return
     }
     const id = await VideoGenService.submit(record)
     Dialog.tipSuccess(t('任务已经提交成功，等待视频生成完成'))
