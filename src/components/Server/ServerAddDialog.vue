@@ -119,21 +119,26 @@ const doSubmit = async () => {
     emit('update')
 }
 
-const doSelectFileDir = async () => {
-    const serverPath = await window.$mapi.file.openDirectory()
-    if (!serverPath) {
+const doSelectLocalDir = async () => {
+    const configPath = await window.$mapi.file.openFile({
+        filters: [
+            {name: 'config.json', extensions: ['json']},
+        ],
+    })
+    if (!configPath) {
         return
     }
-    if (!/^[a-zA-Z0-9\/:\-\\._]+$/.test(serverPath)) {
+    if (!/^[a-zA-Z0-9\/:\-\\._]+$/.test(configPath)) {
         Dialog.tipError(t('模型路径不能包含非英文、空格等特殊字符'))
         return
     }
     emptyModelInfo()
     loading.value = true
     try {
-        const content = await window.$mapi.file.read(serverPath + '/config.json', {
+        const content = await window.$mapi.file.read(configPath, {
             isFullPath: true
         })
+        const serverPath = configPath.replace(/[\/\\]config.json$/, '')
         const json = JSON.parse(content)
         modelInfo.value.type = EnumServerType.LOCAL_DIR
         modelInfo.value.name = json.name || ''
@@ -151,7 +156,7 @@ const doSelectFileDir = async () => {
         modelInfo.value.setting = json.setting || {}
         logStatus.value = ''
     } catch (e) {
-        console.log('ServerImportLocalDialog.doSelectFileDir.error', e)
+        console.log('ServerImportLocalDialog.doSelectLocalDir.error', e)
         Dialog.tipError(t('模型目录识别失败，请选择正确的模型目录'))
     }
     loading.value = false
@@ -191,7 +196,7 @@ const emit = defineEmits({
                                      src="./../../assets/image/server-folder.svg"/>
                             </div>
                             <div>
-                                <a-button @click="doSelectFileDir"
+                                <a-button @click="doSelectLocalDir"
                                           class="block w-full"
                                           :loading="loading">
                                     <template #icon>
@@ -202,6 +207,10 @@ const emit = defineEmits({
                             </div>
                             <div class="mt-3 text-sm text-gray-400 rounded-lg">
                                 {{ $t('模型离线运行在本地，对电脑性能有要求') }}
+                                <a-tooltip
+                                    :content="'①'+$t('访问官方模型页面，下载模型到本地')+' ②'+$t('解压模型压缩包，选择目录中的config.json文件')">
+                                    <icon-question-circle/>
+                                </a-tooltip>
                             </div>
                         </div>
                         <div class="w-1/2 px-3">
