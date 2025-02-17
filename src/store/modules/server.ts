@@ -74,8 +74,8 @@ const createEventChannel = (server: ServerRecord, serverRuntime?: ServerRuntime)
             case 'stopped':
                 break
             case 'taskRunning':
-            case 'taskParam':
             case 'taskResult':
+            case 'taskStatus':
                 const {id} = data
                 const [biz, bizId] = id.split('_')
                 // console.log('task', {type, biz, bizId, data})
@@ -89,9 +89,9 @@ const createEventChannel = (server: ServerRecord, serverRuntime?: ServerRuntime)
                             bizId,
                         } as any, 'running')
                     })
-                } else if ('taskParam' === type) {
+                } else if ('taskResult' === type) {
                     (tasks[biz] as TaskBiz).update?.(bizId, {
-                        resultParam: data.param,
+                        result: data.result,
                     }).then(() => {
                         taskStore.fireChange({
                             biz,

@@ -14,14 +14,17 @@ const init = () => {
 }
 
 const getModule = async (serverInfo: ServerInfo): Promise<ServerContext> => {
+    // console.log('getModule', serverInfo)
     if (!serverModule[serverInfo.localPath]) {
         try {
-            let mapName = serverInfo.name
-            if (mapName.startsWith('Cloud')) {
-                mapName = 'Cloud'
-            }
-            if (mapName in AigcServer) {
-                const server = AigcServer[mapName] as ServerContext
+            if (serverInfo.name.startsWith('Cloud')) {
+                const server = new AigcServer['Cloud']
+                server.type = 'buildIn'
+                server.ServerApi = ServerApi
+                await server.init()
+                serverModule[serverInfo.localPath] = server
+            } else if (serverInfo.name in AigcServer) {
+                const server = AigcServer[serverInfo.name] as ServerContext
                 server.type = 'buildIn'
                 server.ServerApi = ServerApi
                 await server.init()

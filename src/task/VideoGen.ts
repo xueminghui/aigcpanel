@@ -58,6 +58,7 @@ export const VideoGen: TaskBiz = {
             videoFile: videoTemplateRecord?.video,
             soundFile: soundFile,
             param: record.param,
+            result: record.result,
         }).then(r => {
             res = r
         }).catch(e => {
@@ -114,10 +115,10 @@ export const VideoGen: TaskBiz = {
         })
     },
     update: async (bizId, update) => {
-        if ('resultParam' in update) {
+        if ('result' in update) {
             const record = await VideoGenService.get(bizId as any)
             if (record) {
-                update.resultParam = Object.assign({}, record.resultParam, update.resultParam)
+                update.result = Object.assign({}, record.result, update.result)
             }
         }
         await VideoGenService.update(bizId as any, update)

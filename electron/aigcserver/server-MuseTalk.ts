@@ -145,7 +145,26 @@ export const ServerMuseTalk: ServerContext = {
         resultData.start = Date.now()
         try {
             this.send('taskRunning', {id: data.id})
-            if (VersionUtil.ge(this.ServerInfo.version, '0.2.0')) {
+            if (VersionUtil.ge(this.ServerInfo.version, '0.3.0')) {
+                const configJson = await this.ServerApi.launcherPrepareConfigJson({
+                    id: data.id,
+                    mode: 'local',
+                    modelConfig: {
+                        video: data.videoFile,
+                        audio: data.soundFile,
+                        box: data.param.box
+                    }
+                })
+                const result = await this.ServerApi.launcherSubmitAndQuery(this, {
+                    id: data.id,
+                    entryPlaceholders: {
+                        'CONFIG': configJson
+                    },
+                    root: this.ServerInfo.localPath,
+                })
+                resultData.end = result.endTime
+                resultData.data.filePath = result.result.url
+            } else if (VersionUtil.ge(this.ServerInfo.version, '0.2.0')) {
                 const configYaml = await this.ServerApi.file.temp('yaml')
                 await this.ServerApi.file.write(configYaml, [
                     'task_0:',
@@ -201,10 +220,10 @@ export const ServerMuseTalk: ServerContext = {
                 const videoUrl = `${this.url()}download/${outputFile}`
                 const videoLocal = await this.ServerApi.file.temp('mp4')
                 await this.ServerApi.requestUrlFileToLocal(videoUrl, videoLocal)
-                console.log('video', {
-                    videoUrl,
-                    videoLocal
-                })
+                // console.log('video', {
+                //     videoUrl,
+                //     videoLocal
+                // })
                 resultData.data.filePath = videoLocal
             } else {
                 const client = await this._client()

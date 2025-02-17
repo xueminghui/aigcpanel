@@ -57,7 +57,7 @@ export const ServerCosyvoice: ServerContext = {
                 }
             }
         }
-        console.log('command', JSON.stringify(command))
+        // console.log('command', JSON.stringify(command))
         shellController = await this.ServerApi.app.spawnShell(command, {
             stdout: (data) => {
                 this.ServerApi.file.appendText(this.ServerInfo.logFile, data)
@@ -236,7 +236,7 @@ export const ServerCosyvoice: ServerContext = {
                     root: this.ServerInfo.localPath,
                 })
                 resultData.end = result.endTime
-                resultData.data.filePath = result.data.url
+                resultData.data.filePath = result.result.url
             } else {
                 const client = await this._client()
                 const result = await client.predict("/generate_audio", {
@@ -312,9 +312,8 @@ export const ServerCosyvoice: ServerContext = {
                     },
                     root: this.ServerInfo.localPath,
                 })
-                // console.log('launcherSubmitAndQuery', result)
                 resultData.end = result.endTime
-                resultData.data.filePath = result.data.url
+                resultData.data.filePath = result.result.url
             } else {
                 const client = await this._client()
                 const result = await client.predict("/generate_audio", {

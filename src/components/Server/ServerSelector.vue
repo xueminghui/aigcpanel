@@ -27,7 +27,6 @@ const valueStatus = computed(() => {
                      class="w-2 h-2 bg-green-700 rounded-full mr-1 flex-shrink-0"></div>
                 <div v-else class="w-2 h-2 bg-red-700 rounded-full mr-1 flex-shrink-0"></div>
                 <div class="text-xs flex-grow">
-                    {{ server.type === EnumServerType.CLOUD ? '[' + $t('云端') + ']' : '' }}
                     {{ server.title }}
                     v{{ server.version }}
                 </div>

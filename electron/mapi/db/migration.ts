@@ -83,9 +83,9 @@ const versions = [
     {
         version:2,
         up: async (db: DB) => {
-            await db.execute(`ALTER TABLE data_sound_tts ADD COLUMN resultParam TEXT`);
-            await db.execute(`ALTER TABLE data_sound_clone ADD COLUMN resultParam TEXT`);
-            await db.execute(`ALTER TABLE data_video_gen ADD COLUMN resultParam TEXT`);
+            await db.execute(`ALTER TABLE data_sound_tts ADD COLUMN result TEXT`);
+            await db.execute(`ALTER TABLE data_sound_clone ADD COLUMN result TEXT`);
+            await db.execute(`ALTER TABLE data_video_gen ADD COLUMN result TEXT`);
         }
     },
 ]

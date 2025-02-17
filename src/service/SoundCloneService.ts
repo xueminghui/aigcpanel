@@ -22,7 +22,7 @@ export type SoundCloneRecord = {
     startTime?: number,
     endTime?: number | undefined,
     resultWav?: string;
-    resultParam?: any;
+    result?: any;
 
     runtime?: SoundCloneRuntime,
 }
@@ -44,7 +44,7 @@ export const SoundCloneService = {
             ...record,
             param: JSON.parse(record.param ? record.param : '{}'),
             jobResult: JSON.parse(record.jobResult ? record.jobResult : '{}'),
-            resultParam: JSON.parse(record.resultParam ? record.resultParam : '{}')
+            result: JSON.parse(record.result ? record.result : '{}')
         } as SoundCloneRecord
     },
     encodeRecord(record: SoundCloneRecord): SoundCloneRecord {
@@ -54,8 +54,8 @@ export const SoundCloneService = {
         if ('jobResult' in record) {
             record.jobResult = JSON.stringify(record.jobResult || {})
         }
-        if ('resultParam' in record) {
-            record.resultParam = JSON.stringify(record.resultParam || {})
+        if ('result' in record) {
+            record.result = JSON.stringify(record.result || {})
         }
         return record
     },

@@ -41,6 +41,7 @@ export const SoundClone: TaskBiz = {
             promptAudio: record.promptWav,
             promptText: record.promptText,
             param: record.param,
+            result: record.result,
         }).then(r => {
             res = r
         }).catch(e => {
@@ -96,10 +97,10 @@ export const SoundClone: TaskBiz = {
         })
     },
     update: async (bizId, update) => {
-        if ('resultParam' in update) {
+        if ('result' in update) {
             const record = await SoundCloneService.get(bizId as any)
             if (record) {
-                update.resultParam = Object.assign({}, record.resultParam, update.resultParam)
+                update.result = Object.assign({}, record.result, update.result)
             }
         }
         await SoundCloneService.update(bizId as any, update)

@@ -11,8 +11,8 @@ export type SendType = never
     | 'error'
     // 任务
     | 'taskRunning'
-    | 'taskParam'
     | 'taskResult'
+    | 'taskStatus'
 
 export type ServerInfo = {
     localPath: string,

@@ -1,13 +1,14 @@
 import {net} from 'electron'
 import {Client, handle_file} from "@gradio/client";
-import {isWin, platformArch, platformName, platformUUID} from "../../lib/env";
+import {platformArch, platformName, platformUUID} from "../../lib/env";
 import {Events} from "../event/main";
 import {Apps} from "../app";
 import {Files} from "../file/main";
 import fs from 'node:fs'
 import User, {UserApi} from "../user/main";
 import {EncodeUtil} from "../../lib/util";
-import {ServerContext, ServerFunctionDataType, ServerInfo} from "./type";
+import {ServerContext, ServerFunctionDataType} from "./type";
+import {UploadUtil} from "../../lib/upload";
 
 const request = async (url, data?: {}, option?: {}) => {
     option = Object.assign({
@@ -193,9 +194,8 @@ const requestEventSource = async (url: string, param: any, option?: {
 const env = async () => {
     const result = {}
     result['AIGCPANEL_SERVER_API_TOKEN'] = await User.getApiToken()
-    result['AIGCPANEL_SERVER_API_KEY'] = ''
     result['AIGCPANEL_SERVER_UUID'] = platformUUID()
-    result['AIGCPANEL_SERVER_LAUNCHER_MODE'] = 'gui'
+    result['AIGCPANEL_SERVER_LAUNCHER_MODE'] = 'api'
     return result
 }
 
@@ -207,7 +207,12 @@ const sleep = async (ms) => {
 
 const launcherSubmitAndQuery = async (context: ServerContext, data: ServerFunctionDataType, option?: {
     timeout: number,
-}) => {
+}): Promise<{
+    result: {
+        [key: string]: any,
+    },
+    endTime: number,
+}> => {
     option = Object.assign({
         timeout: 24 * 3600,
     }, option)
@@ -217,9 +222,8 @@ const launcherSubmitAndQuery = async (context: ServerContext, data: ServerFuncti
         throw new Error(`submit ${submitRet.msg}`)
     }
     const launcherResult = {
-        param: {},
-        data: {
-            url: null,
+        result: {} as {
+            [key: string]: any,
         },
         endTime: null,
     }
@@ -241,16 +245,10 @@ const launcherSubmitAndQuery = async (context: ServerContext, data: ServerFuncti
             logs = EncodeUtil.base64Decode(logs)
             if (logs) {
                 await Files.appendText(context.ServerInfo.logFile, logs)
-                const paramMat = logs.match(new RegExp(`AigcPanelRunParam\\[${data.id}\\]\\[(.*?)\\]`))
-                if (paramMat) {
-                    const param = JSON.parse(EncodeUtil.base64Decode(paramMat[1]))
-                    launcherResult.param = Object.assign(launcherResult.param, param)
-                    context.send('taskParam', {id: data.id, param})
-                }
                 const resultMat = logs.match(new RegExp(`AigcPanelRunResult\\[${data.id}\\]\\[(.*?)\\]`))
                 if (resultMat) {
                     const result = JSON.parse(EncodeUtil.base64Decode(resultMat[1]))
-                    launcherResult.data = Object.assign(launcherResult.data, result)
+                    launcherResult.result = Object.assign(launcherResult.result, result)
                     context.send('taskResult', {id: data.id, result})
                 }
             }
@@ -268,6 +266,98 @@ const launcherPrepareConfigJson = async (data: any) => {
     const configJson = await Files.temp('json')
     await Files.write(configJson, JSON.stringify(data), {isFullPath: true})
     return configJson
+}
+
+const launcherCloudSubmitAndQuery = async (context: ServerContext, data: ServerFunctionDataType, option?: {
+    result?: {
+        taskId?: string,
+    },
+    timeout?: number,
+    uploadFileKeys?: []
+}) => {
+    option = Object.assign({
+        result: {
+            taskId: '',
+        },
+        timeout: 24 * 3600,
+        uploadFileKeys: [],
+    }, option)
+    let taskId = option.result.taskId || ''
+    if (!taskId) {
+        const resCheck = await UserApi.post<{
+            uploadType: string,
+        }>('aigcpanel/task/check', data, {
+            catchException: false
+        })
+        // console.log('resCheck', resCheck)
+        if (resCheck.code) {
+            throw resCheck.msg
+        }
+        if (resCheck.data.uploadType && option.uploadFileKeys && option.uploadFileKeys.length > 0 && data['modelConfig']) {
+            for (let key of option.uploadFileKeys) {
+                if (key in data['modelConfig']) {
+                    const uploadRes = await UploadUtil.upload(resCheck.data.uploadType as any, data['modelConfig'][key])
+                    if (uploadRes.success) {
+                        data['modelConfig'][key] = uploadRes.url
+                    }
+                }
+            }
+        }
+        const resSubmit = await UserApi.post<{
+            taskId: string,
+        }>('aigcpanel/task/submit', data, {
+            catchException: false
+        })
+        if (resSubmit.code) {
+            throw resSubmit.msg
+        }
+        taskId = resSubmit.data.taskId
+        // console.log('resSubmit', resSubmit)
+        context.send('taskResult', {id: data.id, result: {taskId}})
+    }
+    const launcherResult = {
+        param: {},
+        result: {},
+        endTime: null,
+    }
+    const totalWait = Math.ceil(option.timeout / 5)
+    let lastStatus = null
+    for (let i = 0; i < totalWait; i++) {
+        if (i >= totalWait - 1) {
+            throw new Error('timeout')
+        }
+        await sleep(5000)
+        const queryRet = await UserApi.post<{
+            status: 'queue' | 'process' | 'success' | 'fail' | 'error',
+            taskId: string,
+            result: any,
+        }>(`aigcpanel/task/query`, {
+            taskId
+        }) as any
+        // console.log('queryRet', JSON.stringify(queryRet))
+        if (queryRet.code) {
+            throw new Error(queryRet.msg)
+        }
+        if (lastStatus !== queryRet.data.status) {
+            lastStatus = queryRet.data.status
+            if ('process' === lastStatus) {
+                context.send('taskRunning', {id: data.id})
+            } else {
+                context.send('taskStatus', {id: data.id, status: queryRet.data.status})
+            }
+        }
+        if ('success' === queryRet.data.status) {
+            launcherResult.endTime = Date.now()
+            launcherResult.result = queryRet.data.result
+            break
+        } else if ('fail' === queryRet.data.status || 'error' === queryRet.data.status) {
+            if (queryRet.data.result && queryRet.data.result.msg) {
+                throw queryRet.data.result.msg
+            }
+            throw queryRet.data.status
+        }
+    }
+    return launcherResult
 }
 
 export default {
@@ -290,4 +380,5 @@ export default {
     base64Decode: EncodeUtil.base64Decode,
     launcherSubmitAndQuery,
     launcherPrepareConfigJson,
+    launcherCloudSubmitAndQuery,
 }

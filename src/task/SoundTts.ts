@@ -40,6 +40,7 @@ export const SoundTts: TaskBiz = {
             id: `SoundTts_${bizId}`,
             text: record.text,
             param: record.param,
+            result: record.result,
         }).then(r => {
             res = r
         }).catch(e => {
@@ -96,10 +97,10 @@ export const SoundTts: TaskBiz = {
     },
 
     update: async (bizId, update) => {
-        if ('resultParam' in update) {
+        if ('result' in update) {
             const record = await SoundTtsService.get(bizId as any)
             if (record) {
-                update.resultParam = Object.assign({}, record.resultParam, update.resultParam)
+                update.result = Object.assign({}, record.result, update.result)
             }
         }
         await SoundTtsService.update(bizId as any, update)
