@@ -12,7 +12,9 @@ import {EnumServerStatus} from "../../types/Server";
 import ParamForm from "../common/ParamForm.vue";
 import {mapError} from "../../lib/error";
 import {PermissionService} from "../../service/PermissionService";
+import ServerContentInfoAction from "../Server/ServerContentInfoAction.vue";
 
+const modelConfig = ref(null)
 const paramForm = ref<InstanceType<typeof ParamForm> | null>(null)
 const soundClonePromptStore = useSoundClonePromptStore()
 const serverStore = useServerStore()
@@ -49,6 +51,7 @@ watch(() => formData.value.serverKey, async (value) => {
             return
         }
         formDataParam.value = res.data.functions.soundClone?.param || []
+        modelConfig.value = res.data
     }
 })
 
@@ -137,9 +140,10 @@ const emit = defineEmits({
             <a-textarea v-model="formData.text" :placeholder="$t('输入语音内容开始克隆')"></a-textarea>
         </div>
         <div class="pt-2">
-            <a-button type="primary" @click="doSubmit">
+            <a-button class="mr-2" type="primary" @click="doSubmit">
                 {{ $t('开始克隆') }}
             </a-button>
+            <ServerContentInfoAction :config="modelConfig as any" func="soundClone" />
         </div>
     </div>
 </template>

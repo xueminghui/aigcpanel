@@ -103,13 +103,17 @@ export const ServerCosyvoice: ServerContext = {
     },
     async config() {
         return {
-            "code": 0,
-            "msg": "ok",
-            "data": {
-                "httpUrl": shellController ? this.url() : null,
-                "functions": {
-                    "soundClone": {
-                        "param": [
+            code: 0,
+            msg: "ok",
+            data: {
+                httpUrl: shellController ? this.url() : null,
+                content: ``,
+                functions: {
+                    soundClone: {
+                        content: `
+<p><b>模型克隆</b> 请使用5-10s的音频，太长的音频会导致克隆变慢。</p>
+                `,
+                        param: [
                             {
                                 name: "speed",
                                 type: "slider",
@@ -143,8 +147,8 @@ export const ServerCosyvoice: ServerContext = {
                             }
                         ],
                     },
-                    "soundTts": {
-                        "param": [
+                    soundTts: {
+                        param: [
                             {
                                 name: "speaker",
                                 type: "select",

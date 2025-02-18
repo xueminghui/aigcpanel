@@ -11,10 +11,12 @@ import {t} from "../../lang";
 import {EnumServerStatus} from "../../types/Server";
 import ParamForm from "../common/ParamForm.vue";
 import {PermissionService} from "../../service/PermissionService";
+import ServerContentInfoAction from "../Server/ServerContentInfoAction.vue";
 
 const paramForm = ref<InstanceType<typeof ParamForm> | null>(null)
 const serverStore = useServerStore()
 
+const modelConfig = ref(null)
 const formData = ref({
     serverKey: '',
     text: '',
@@ -45,6 +47,7 @@ watch(() => formData.value.serverKey, async (value) => {
             return
         }
         formDataParam.value = res.data.functions.soundTts?.param || []
+        modelConfig.value = res.data
     }
 })
 
@@ -114,9 +117,10 @@ const emit = defineEmits({
                         :placeholder="$t('输入语音内容开始合成')"></a-textarea>
         </div>
         <div class="pt-2">
-            <a-button type="primary" @click="doSubmit">
+            <a-button class="mr-2" type="primary" @click="doSubmit">
                 {{ $t('开始合成') }}
             </a-button>
+            <ServerContentInfoAction :config="modelConfig as any" func="soundTts" />
         </div>
     </div>
 </template>

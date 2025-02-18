@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {EnumServerType, ServerRecord} from "../../types/Server";
 import {ref} from "vue";
-import {functionToLabels} from "../../lib/aigcpanel";
+import {buildServerContent, functionToLabels} from "../../lib/aigcpanel";
 import {useServerStore} from "../../store/modules/server";
 
 const serverStore = useServerStore()
@@ -10,6 +10,7 @@ const props = defineProps<{
 }>()
 
 const httpUrl = ref('')
+const content = ref('')
 const visible = ref(false)
 
 const show = async () => {
@@ -17,6 +18,7 @@ const show = async () => {
     const serverInfo = await serverStore.serverInfo(props.record)
     const res = await window.$mapi.server.config(serverInfo)
     httpUrl.value = res.data?.httpUrl || ''
+    content.value = buildServerContent(res.data)
 }
 
 const doOpenHttpUrl = () => {
@@ -41,42 +43,39 @@ defineExpose({
         <div>
             <div class="border rounded-lg p-3">
                 <div class="flex mb-4">
-                    <div class="w-20">{{ $t('类型') }}</div>
-                    <div>
-                        <span v-if="record.type===EnumServerType.LOCAL">
-                            <i class="iconfont icon-desktop mr-1"></i>
-                            {{ $t('本地模型') }}
-                        </span>
-                        <span v-else-if="record.type===EnumServerType.LOCAL_DIR">
-                            <i class="iconfont icon-folder mr-1"></i>
-                            {{ $t('本地模型目录') }}
-                        </span>
-                        <span v-else-if="record.type===EnumServerType.CLOUD">
-                            <i class="iconfont icon-network mr-1"></i>
-                            {{ $t('云端模型') }}
-                        </span>
-                    </div>
-                </div>
-                <div class="flex mb-4">
                     <div class="w-20">{{ $t('模型') }}</div>
-                    <div>
-                        {{ props.record.title }}
-                    </div>
-                </div>
-                <div class="flex mb-4" v-if="record.type===EnumServerType.LOCAL_DIR">
-                    <div class="w-20 flex-shrink-0">{{ $t('目录') }}</div>
-                    <div>
-                        <div class="rounded py-1 px-2 text-sm bg-gray-100">
-                            {{ props.record.localPath }}
+                    <div class="flex items-center">
+                        <div class="mr-2">{{ props.record.title }}</div>
+                        <div v-if="record.type===EnumServerType.LOCAL_DIR"
+                             class="mr-2 text-sm bg-gray-100 px-2 leading-6 inline-block rounded-lg">
+                            {{ props.record.name }}
+                        </div>
+                        <div class="mr-2 text-sm bg-gray-100 px-2 leading-6 inline-block rounded-lg">
+                            v{{ props.record.version }}
                         </div>
                     </div>
                 </div>
                 <div class="flex mb-4">
-                    <div class="w-20">{{ $t('版本') }}</div>
+                    <div class="w-20">{{ $t('类型') }}</div>
                     <div>
-                        <a-tag>
-                            v{{ props.record.version }}
-                        </a-tag>
+                        <div>
+                            <div v-if="record.type===EnumServerType.LOCAL">
+                                <i class="iconfont icon-desktop mr-1"></i>
+                                {{ $t('本地模型') }}
+                            </div>
+                            <div v-else-if="record.type===EnumServerType.LOCAL_DIR">
+                                <i class="iconfont icon-folder mr-1"></i>
+                                {{ $t('本地模型目录') }}
+                            </div>
+                            <div v-else-if="record.type===EnumServerType.CLOUD">
+                                <i class="iconfont icon-network mr-1"></i>
+                                {{ $t('云端模型') }}
+                            </div>
+                        </div>
+                        <div v-if="record.type===EnumServerType.LOCAL_DIR"
+                             class="rounded py-1 px-1 text-xs bg-gray-100">
+                            {{ props.record.localPath }}
+                        </div>
                     </div>
                 </div>
                 <div class="flex mb-4">
@@ -85,14 +84,6 @@ defineExpose({
                         <a-tag v-for="label in functionToLabels(record.functions)" class="mr-1">
                             {{ label }}
                         </a-tag>
-                    </div>
-                </div>
-                <div class="flex mb-4">
-                    <div class="w-20">{{ $t('标识') }}</div>
-                    <div>
-                        <span class="mr-2 text-sm bg-gray-100 px-2 leading-6 inline-block rounded-lg">
-                            {{ props.record.name }}
-                        </span>
                     </div>
                 </div>
                 <div class="flex mb-4" v-if="record.type===EnumServerType.LOCAL_DIR">
@@ -110,6 +101,14 @@ defineExpose({
                         </div>
                         <div v-else class="text-gray-400 text-sm leading-7">
                             {{ $t('未启动') }}
+                        </div>
+                    </div>
+                </div>
+                <div class="flex mb-4" v-if="content">
+                    <div class="w-20">{{ $t('说明') }}</div>
+                    <div class="flex-grow">
+                        <div class="w-full max-h-32 p-3 overflow-auto text-sm bg-gray-100 leading-6 rounded-lg">
+                            <div v-html="content"></div>
                         </div>
                     </div>
                 </div>

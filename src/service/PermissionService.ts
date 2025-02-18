@@ -30,9 +30,16 @@ export const PermissionService = {
             }, {
                 catchException: false
             })
+            Dialog.loadingOff()
             if (res.code) {
-                Dialog.loadingOff()
                 Dialog.tipError(res.msg)
+                setTimeout(() => {
+                    if (res.data && res.data.type) {
+                        if ('CreditNotEnough' === res.data.type) {
+                            window.$mapi.user.open().then()
+                        }
+                    }
+                }, 3000)
                 return false
             }
         }

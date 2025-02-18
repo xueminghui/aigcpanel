@@ -14,10 +14,12 @@ import {VideoGenRecord, VideoGenService} from "../../service/VideoGenService";
 import ParamForm from "../common/ParamForm.vue";
 import {mapError} from "../../lib/error";
 import {PermissionService} from "../../service/PermissionService";
+import ServerContentInfoAction from "../Server/ServerContentInfoAction.vue";
 
 const serverStore = useServerStore()
 const paramForm = ref<InstanceType<typeof ParamForm> | null>(null)
 
+const modelConfig = ref(null)
 const formData = ref({
     serverKey: '',
     videoTemplateId: 0,
@@ -63,6 +65,7 @@ watch(() => formData.value.serverKey, async (value) => {
             return
         }
         formDataParam.value = res.data.functions.videoGen?.param || []
+        modelConfig.value = res.data
     }
 })
 
@@ -239,9 +242,10 @@ defineExpose({
             <ParamForm ref="paramForm" :param="formDataParam"/>
         </div>
         <div class="pt-2">
-            <a-button type="primary" @click="doSubmit">
+            <a-button class="mr-2" type="primary" @click="doSubmit">
                 {{ $t('开始生成视频') }}
             </a-button>
+            <ServerContentInfoAction :config="modelConfig as any" func="videoGen" />
         </div>
     </div>
 </template>
