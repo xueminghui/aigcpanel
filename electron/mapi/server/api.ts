@@ -6,7 +6,7 @@ import {Apps} from "../app";
 import {Files} from "../file/main";
 import fs from 'node:fs'
 import User, {UserApi} from "../user/main";
-import {EncodeUtil} from "../../lib/util";
+import {EncodeUtil, MemoryCacheUtil, MemoryMapCacheUtil} from "../../lib/util";
 import {ServerContext, ServerFunctionDataType} from "./type";
 import {UploadUtil} from "../../lib/upload";
 
@@ -268,18 +268,17 @@ const launcherPrepareConfigJson = async (data: any) => {
     return configJson
 }
 
-const launcherCloudSubmitAndQuery = async (context: ServerContext, data: ServerFunctionDataType, option?: {
+const launcherCloudSubmit = async (context: ServerContext, data: ServerFunctionDataType, option?: {
     result?: {
         taskId?: string,
     },
-    timeout?: number,
     uploadFileKeys?: []
-}) => {
+}): Promise<void> => {
+    // console.log('launcherCloudSubmitAndQuery.data', {data})
     option = Object.assign({
         result: {
             taskId: '',
         },
-        timeout: 24 * 3600,
         uploadFileKeys: [],
     }, option)
     let taskId = option.result.taskId || ''
@@ -297,6 +296,7 @@ const launcherCloudSubmitAndQuery = async (context: ServerContext, data: ServerF
             for (let key of option.uploadFileKeys) {
                 if (key in data['modelConfig']) {
                     const uploadRes = await UploadUtil.upload(resCheck.data.uploadType as any, data['modelConfig'][key])
+                    // console.log('uploadRes', uploadRes)
                     if (uploadRes.success) {
                         data['modelConfig'][key] = uploadRes.url
                     }
@@ -315,47 +315,64 @@ const launcherCloudSubmitAndQuery = async (context: ServerContext, data: ServerF
         // console.log('resSubmit', resSubmit)
         context.send('taskResult', {id: data.id, result: {taskId}})
     }
+}
+
+const launcherCloudQuery = async (context: ServerContext, data: ServerFunctionDataType, option?: {
+    result?: {
+        taskId?: string,
+    },
+}): Promise<{
+    status: 'process' | 'success',
+    param: any,
+    result: any,
+    endTime: number,
+}> => {
+    // console.log('launcherCloudSubmitAndQuery.data', {data})
+    option = Object.assign({
+        result: {
+            taskId: '',
+        },
+        timeout: 24 * 3600,
+        uploadFileKeys: [],
+    }, option)
+    let taskId = option.result.taskId || ''
+    if (!taskId) {
+        throw new Error('taskId is empty')
+    }
     const launcherResult = {
+        status: 'process' as 'process' | 'success',
         param: {},
         result: {},
-        endTime: null,
+        endTime: 0,
     }
-    const totalWait = Math.ceil(option.timeout / 5)
-    let lastStatus = null
-    for (let i = 0; i < totalWait; i++) {
-        if (i >= totalWait - 1) {
-            throw new Error('timeout')
+    const queryRet = await UserApi.post<{
+        status: 'queue' | 'process' | 'success' | 'fail' | 'error',
+        taskId: string,
+        result: any,
+    }>(`aigcpanel/task/query`, {
+        taskId
+    }) as any
+    // console.log('queryRet', JSON.stringify(queryRet))
+    if (queryRet.code) {
+        throw new Error(queryRet.msg)
+    }
+    const oldStatus = MemoryMapCacheUtil.get('CloudTaskStatus', taskId)
+    if (oldStatus !== queryRet.data.status) {
+        if ('process' === queryRet.data.status) {
+            context.send('taskRunning', {id: data.id})
         }
-        await sleep(5000)
-        const queryRet = await UserApi.post<{
-            status: 'queue' | 'process' | 'success' | 'fail' | 'error',
-            taskId: string,
-            result: any,
-        }>(`aigcpanel/task/query`, {
-            taskId
-        }) as any
-        // console.log('queryRet', JSON.stringify(queryRet))
-        if (queryRet.code) {
-            throw new Error(queryRet.msg)
+        MemoryMapCacheUtil.set('CloudTaskStatus', taskId, queryRet.data.status)
+        context.send('taskStatus', {id: data.id, status: queryRet.data.status})
+    }
+    if ('success' === queryRet.data.status) {
+        launcherResult.status = 'success'
+        launcherResult.endTime = Date.now()
+        launcherResult.result = queryRet.data.result
+    } else if ('fail' === queryRet.data.status || 'error' === queryRet.data.status) {
+        if (queryRet.data.result && queryRet.data.result.msg) {
+            throw queryRet.data.result.msg
         }
-        if (lastStatus !== queryRet.data.status) {
-            lastStatus = queryRet.data.status
-            if ('process' === lastStatus) {
-                context.send('taskRunning', {id: data.id})
-            } else {
-                context.send('taskStatus', {id: data.id, status: queryRet.data.status})
-            }
-        }
-        if ('success' === queryRet.data.status) {
-            launcherResult.endTime = Date.now()
-            launcherResult.result = queryRet.data.result
-            break
-        } else if ('fail' === queryRet.data.status || 'error' === queryRet.data.status) {
-            if (queryRet.data.result && queryRet.data.result.msg) {
-                throw queryRet.data.result.msg
-            }
-            throw queryRet.data.status
-        }
+        throw queryRet.data.status
     }
     return launcherResult
 }
@@ -380,5 +397,6 @@ export default {
     base64Decode: EncodeUtil.base64Decode,
     launcherSubmitAndQuery,
     launcherPrepareConfigJson,
-    launcherCloudSubmitAndQuery,
+    launcherCloudSubmit,
+    launcherCloudQuery,
 }

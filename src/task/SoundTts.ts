@@ -35,23 +35,15 @@ export const SoundTts: TaskBiz = {
         await SoundTtsService.update(bizId as any, {
             status: 'wait',
         })
-        let res
-        await window.$mapi.server.callFunction(serverInfo, 'soundTts', {
+        const res = await window.$mapi.server.callFunctionWithException(serverInfo, 'soundTts', {
             id: `SoundTts_${bizId}`,
             text: record.text,
             param: record.param,
             result: record.result,
-        }).then(r => {
-            res = r
-        }).catch(e => {
-            res = {
-                code: -1,
-                msg: e,
-            }
         })
         // console.log('SoundTts.runFunc.res', res)
         if (res.code) {
-            throw res.msg || 'apiRequest soundTts fail'
+            throw res.msg || 'SoundTts run fail'
         }
         switch (res.data.type) {
             case 'success':
@@ -73,7 +65,28 @@ export const SoundTts: TaskBiz = {
     },
     queryFunc: async (bizId, bizParam) => {
         // console.log('SoundTts.queryFunc', {bizId, bizParam})
-        throw new Error('RequestError')
+        const {record, server} = await prepareData(bizId, bizParam)
+        const serverInfo = await serverStore.serverInfo(server)
+        const res = await window.$mapi.server.callFunctionWithException(serverInfo, 'query', {
+            id: `SoundTts_${bizId}`,
+            result: record.result,
+        })
+        if (res.code) {
+            throw res.msg || 'SoundTts query fail'
+        }
+        // console.log('SoundTts.queryFunc.res', res)
+        switch (res.data.type) {
+            case 'success':
+                await SoundTtsService.update(bizId as any, {
+                    status: 'success',
+                    jobId: '',
+                    jobResult: res,
+                })
+                return 'success'
+            case 'running':
+                return 'running'
+        }
+        return 'fail'
     },
     successFunc: async (bizId, bizParam) => {
         // console.log('SoundTts.successFunc', {bizId, bizParam})

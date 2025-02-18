@@ -52,20 +52,12 @@ export const VideoGen: TaskBiz = {
         if (!soundFile) {
             throw new Error('SoundFileEmpty')
         }
-        let res
-        await window.$mapi.server.callFunction(serverInfo, 'videoGen', {
+        const res = await window.$mapi.server.callFunctionWithException(serverInfo, 'videoGen', {
             id: `VideoGen_${bizId}`,
             videoFile: videoTemplateRecord?.video,
             soundFile: soundFile,
             param: record.param,
             result: record.result,
-        }).then(r => {
-            res = r
-        }).catch(e => {
-            res = {
-                code: -1,
-                msg: e,
-            }
         })
         // console.log('VideoGen.runFunc.res', res)
         if (res.code) {
@@ -90,8 +82,29 @@ export const VideoGen: TaskBiz = {
         throw new Error('unknown res.data.type')
     },
     queryFunc: async (bizId, bizParam) => {
-        // console.log('SoundTts.queryFunc', {bizId, bizParam})
-        throw new Error('RequestError')
+        // console.log('VideoGen.queryFunc', {bizId, bizParam})
+        const {record, server} = await prepareData(bizId, bizParam)
+        const serverInfo = await serverStore.serverInfo(server)
+        const res = await window.$mapi.server.callFunctionWithException(serverInfo, 'query', {
+            id: `VideoGen_${bizId}`,
+            result: record.result,
+        })
+        if (res.code) {
+            throw res.msg || 'VideoGen query fail'
+        }
+        // console.log('VideoGen.queryFunc.res', res)
+        switch (res.data.type) {
+            case 'success':
+                await VideoGenService.update(bizId as any, {
+                    status: 'success',
+                    jobId: '',
+                    jobResult: res,
+                })
+                return 'success'
+            case 'running':
+                return 'running'
+        }
+        return 'fail'
     },
     successFunc: async (bizId, bizParam) => {
         console.log('VideoGen.successFunc', {bizId, bizParam})

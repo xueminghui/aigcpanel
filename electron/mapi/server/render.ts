@@ -21,10 +21,22 @@ const callFunction = async (serverInfo: ServerInfo, method: string, data: any) =
     return ipcRenderer.invoke('server:callFunction', serverInfo, method, data)
 }
 
+const callFunctionWithException = async (serverInfo: ServerInfo, method: string, data: any) => {
+    try {
+        return ipcRenderer.invoke('server:callFunction', serverInfo, method, data)
+    } catch (e) {
+        return {
+            code: -1,
+            msg: e + '',
+        }
+    }
+}
+
 export default {
     start,
     ping,
     stop,
     config,
     callFunction,
+    callFunctionWithException,
 }

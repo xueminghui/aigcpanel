@@ -1,6 +1,7 @@
 import {TaskBiz} from "../store/modules/task";
 import {useServerStore} from "../store/modules/server";
 import {SoundCloneService} from "../service/SoundCloneService";
+import {SoundTtsService} from "../service/SoundTtsService";
 
 const serverStore = useServerStore()
 
@@ -34,21 +35,13 @@ export const SoundClone: TaskBiz = {
         await SoundCloneService.update(bizId as any, {
             status: 'wait',
         })
-        let res
-        await window.$mapi.server.callFunction(serverInfo, 'soundClone', {
+        const res = await window.$mapi.server.callFunctionWithException(serverInfo, 'soundClone', {
             id: `SoundClone_${bizId}`,
             text: record.text,
             promptAudio: record.promptWav,
             promptText: record.promptText,
             param: record.param,
             result: record.result,
-        }).then(r => {
-            res = r
-        }).catch(e => {
-            res = {
-                code: -1,
-                msg: e,
-            }
         })
         if (res.code) {
             throw res.msg || 'apiRequest soundClone fail'
@@ -73,7 +66,28 @@ export const SoundClone: TaskBiz = {
     },
     queryFunc: async (bizId, bizParam) => {
         // console.log('SoundTts.queryFunc', {bizId, bizParam})
-        throw new Error('RequestError')
+        const {record, server} = await prepareData(bizId, bizParam)
+        const serverInfo = await serverStore.serverInfo(server)
+        const res = await window.$mapi.server.callFunctionWithException(serverInfo, 'query', {
+            id: `SoundClone_${bizId}`,
+            result: record.result,
+        })
+        if (res.code) {
+            throw res.msg || 'SoundClone query fail'
+        }
+        // console.log('SoundClone.queryFunc.res', res)
+        switch (res.data.type) {
+            case 'success':
+                await SoundCloneService.update(bizId as any, {
+                    status: 'success',
+                    jobId: '',
+                    jobResult: res,
+                })
+                return 'success'
+            case 'running':
+                return 'running'
+        }
+        return 'fail'
     },
     successFunc: async (bizId, bizParam) => {
         // console.log('SoundClone.successFunc', {bizId, bizParam})

@@ -219,6 +219,14 @@ declare interface Window {
                     [key: string]: any
                 }
             ) => Promise<any>,
+            callFunctionWithException: (
+                serverInfo: ServerInfo,
+                method: string,
+                data: {
+                    id: string,
+                    [key: string]: any
+                }
+            ) => Promise<any>,
         },
     }
 }
