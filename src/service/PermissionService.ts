@@ -1,6 +1,7 @@
 import {useServerStore} from "../store/modules/server";
 import {EnumServerType} from "../types/Server";
 import {Dialog} from "../lib/dialog";
+import {t} from "../lang";
 
 const serverStore = useServerStore()
 export const PermissionService = {
@@ -16,8 +17,10 @@ export const PermissionService = {
             throw 'ServerNotFound'
         }
         if (server.type === EnumServerType.CLOUD) {
+            Dialog.loadingOn(t('正在提交'))
             const user = await window.$mapi.user.get()
             if (!user.user.id) {
+                Dialog.loadingOff()
                 window.$mapi.user.open().then()
                 return false
             }
@@ -28,6 +31,7 @@ export const PermissionService = {
                 catchException: false
             })
             if (res.code) {
+                Dialog.loadingOff()
                 Dialog.tipError(res.msg)
                 return false
             }
