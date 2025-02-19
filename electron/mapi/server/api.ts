@@ -8,7 +8,6 @@ import fs from 'node:fs'
 import User, {UserApi} from "../user/main";
 import {EncodeUtil, MemoryCacheUtil, MemoryMapCacheUtil} from "../../lib/util";
 import {ServerContext, ServerFunctionDataType} from "./type";
-import {UploadUtil} from "../../lib/upload";
 
 const request = async (url, data?: {}, option?: {}) => {
     option = Object.assign({
@@ -268,115 +267,6 @@ const launcherPrepareConfigJson = async (data: any) => {
     return configJson
 }
 
-const launcherCloudSubmit = async (context: ServerContext, data: ServerFunctionDataType, option?: {
-    result?: {
-        taskId?: string,
-    },
-    uploadFileKeys?: []
-}): Promise<void> => {
-    // console.log('launcherCloudSubmitAndQuery.data', {data})
-    option = Object.assign({
-        result: {
-            taskId: '',
-        },
-        uploadFileKeys: [],
-    }, option)
-    let taskId = option.result.taskId || ''
-    if (!taskId) {
-        const resCheck = await UserApi.post<{
-            uploadType: string,
-        }>('aigcpanel/task/check', data, {
-            catchException: false
-        })
-        // console.log('resCheck', resCheck)
-        if (resCheck.code) {
-            throw resCheck.msg
-        }
-        if (resCheck.data.uploadType && option.uploadFileKeys && option.uploadFileKeys.length > 0 && data['modelConfig']) {
-            for (let key of option.uploadFileKeys) {
-                if (key in data['modelConfig']) {
-                    const uploadRes = await UploadUtil.upload(resCheck.data.uploadType as any, data['modelConfig'][key])
-                    // console.log('uploadRes', uploadRes)
-                    if (uploadRes.success) {
-                        data['modelConfig'][key] = uploadRes.url
-                    }
-                }
-            }
-        }
-        const resSubmit = await UserApi.post<{
-            taskId: string,
-        }>('aigcpanel/task/submit', data, {
-            catchException: false
-        })
-        if (resSubmit.code) {
-            throw resSubmit.msg
-        }
-        taskId = resSubmit.data.taskId
-        // console.log('resSubmit', resSubmit)
-        context.send('taskResult', {id: data.id, result: {taskId}})
-    }
-}
-
-const launcherCloudQuery = async (context: ServerContext, data: ServerFunctionDataType, option?: {
-    result?: {
-        taskId?: string,
-    },
-}): Promise<{
-    status: 'process' | 'success',
-    param: any,
-    result: any,
-    endTime: number,
-}> => {
-    // console.log('launcherCloudSubmitAndQuery.data', {data})
-    option = Object.assign({
-        result: {
-            taskId: '',
-        },
-        timeout: 24 * 3600,
-        uploadFileKeys: [],
-    }, option)
-    let taskId = option.result.taskId || ''
-    if (!taskId) {
-        throw new Error('taskId is empty')
-    }
-    const launcherResult = {
-        status: 'process' as 'process' | 'success',
-        param: {},
-        result: {},
-        endTime: 0,
-    }
-    const queryRet = await UserApi.post<{
-        status: 'queue' | 'process' | 'success' | 'fail' | 'error',
-        taskId: string,
-        result: any,
-    }>(`aigcpanel/task/query`, {
-        taskId
-    }) as any
-    // console.log('queryRet', JSON.stringify(queryRet))
-    if (queryRet.code) {
-        throw new Error(queryRet.msg)
-    }
-    const oldStatus = MemoryMapCacheUtil.get('CloudTaskStatus', taskId)
-    if (oldStatus !== queryRet.data.status) {
-        if ('process' === queryRet.data.status) {
-            context.send('taskRunning', {id: data.id})
-        }
-        MemoryMapCacheUtil.set('CloudTaskStatus', taskId, queryRet.data.status)
-        context.send('taskStatus', {id: data.id, status: queryRet.data.status})
-    }
-    if ('success' === queryRet.data.status) {
-        launcherResult.status = 'success'
-        launcherResult.endTime = Date.now()
-        launcherResult.result = queryRet.data.result
-    } else if ('fail' === queryRet.data.status || 'error' === queryRet.data.status) {
-        if (queryRet.data.result && queryRet.data.result.msg) {
-            throw queryRet.data.result.msg
-        }
-        throw queryRet.data.status
-    }
-    return launcherResult
-}
-
 export default {
     GradioClient: Client,
     GradioHandleFile: handle_file,
@@ -397,6 +287,4 @@ export default {
     base64Decode: EncodeUtil.base64Decode,
     launcherSubmitAndQuery,
     launcherPrepareConfigJson,
-    launcherCloudSubmit,
-    launcherCloudQuery,
 }
