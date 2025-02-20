@@ -4,6 +4,7 @@ import {Log} from "../log/main";
 import {mapError} from "./error";
 import {AigcServer} from "../../aigcserver";
 import {ServerContext, ServerInfo} from "./type";
+import {Files} from "../file/main";
 
 const serverModule: {
     [key: string]: ServerContext
@@ -13,12 +14,17 @@ const init = () => {
 
 }
 
-const getModule = async (serverInfo: ServerInfo): Promise<ServerContext> => {
+const getModule = async (serverInfo: ServerInfo, option?: {
+    throwException: boolean
+}): Promise<ServerContext> => {
+    option = Object.assign({
+        throwException: true
+    }, option)
     // console.log('getModule', serverInfo)
     if (!serverModule[serverInfo.localPath]) {
         try {
             if (serverInfo.name.startsWith('Cloud')) {
-                const server = new AigcServer['Cloud']
+                const server = new AigcServer['Cloud']()
                 server.type = 'buildIn'
                 server.ServerApi = ServerApi
                 await server.init()
@@ -31,6 +37,11 @@ const getModule = async (serverInfo: ServerInfo): Promise<ServerContext> => {
                 serverModule[serverInfo.localPath] = server
             } else {
                 const serverPath = `${serverInfo.localPath}/server.js`
+                if (!await Files.exists(serverPath, {
+                    isFullPath: true
+                })) {
+                    throw `ServerFileNotFound : ${serverPath}`
+                }
                 const module = await import(`file://${serverPath}`)
                 module.default.type = 'custom'
                 module.default.ServerApi = ServerApi
@@ -38,6 +49,9 @@ const getModule = async (serverInfo: ServerInfo): Promise<ServerContext> => {
                 serverModule[serverInfo.localPath] = module.default
             }
         } catch (e) {
+            if (!option.throwException) {
+                return null
+            }
             const error = mapError(e)
             Log.error('mapi.server.getModule.error', error)
             throw error
@@ -47,6 +61,17 @@ const getModule = async (serverInfo: ServerInfo): Promise<ServerContext> => {
     serverModule[serverInfo.localPath].ServerInfo = serverInfo
     return serverModule[serverInfo.localPath]
 }
+
+ipcMain.handle('server:isSupport', async (event, serverInfo: ServerInfo) => {
+    try {
+        const module = await getModule(serverInfo, {
+            throwException: false
+        })
+        return !!module
+    } catch (e) {
+        return false
+    }
+})
 
 ipcMain.handle('server:start', async (event, serverInfo: ServerInfo) => {
     const module = await getModule(serverInfo)

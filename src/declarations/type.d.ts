@@ -207,6 +207,7 @@ declare interface Window {
             run: (args: string[]) => Promise<string>,
         },
         server: {
+            isSupport: (serverInfo: ServerInfo) => Promise<boolean>,
             start: (serverInfo: ServerInfo) => Promise<void>,
             stop: (serverInfo: ServerInfo) => Promise<void>,
             ping: (serverInfo: ServerInfo) => Promise<boolean>,

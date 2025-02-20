@@ -29,6 +29,7 @@ const modelInfo = ref({
     functions: [],
     settings: [],
     setting: {},
+    isSupport: false,
 })
 const isImporting = ref(false)
 const logStatus = ref('')
@@ -60,6 +61,7 @@ const emptyModelInfo = () => {
     modelInfo.value.functions = []
     modelInfo.value.settings = []
     modelInfo.value.setting = {}
+    modelInfo.value.isSupport = false
 }
 
 const doSubmitLocalDir = async () => {
@@ -154,7 +156,11 @@ const doSelectLocalDir = async () => {
         modelInfo.value.functions = json.functions || []
         modelInfo.value.settings = json.settings || {}
         modelInfo.value.setting = json.setting || {}
-        logStatus.value = ''
+        modelInfo.value.isSupport = await window.$mapi.server.isSupport({
+            localPath: serverPath,
+            name: modelInfo.value.name,
+        } as any)
+        logStatus.value = modelInfo.value.isSupport ? '' : t('模型不支持')
     } catch (e) {
         console.log('ServerImportLocalDialog.doSelectLocalDir.error', e)
         Dialog.tipError(t('模型目录识别失败，请选择正确的模型目录'))
@@ -276,6 +282,7 @@ const emit = defineEmits({
                     <div class="pt-4 flex items-center">
                         <div>
                             <a-button class="mr-2" type="primary"
+                                      :disabled="!modelInfo.isSupport"
                                       :loading="isImporting"
                                       @click="doSubmit">
                                 <template #icon>

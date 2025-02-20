@@ -1,6 +1,10 @@
 import {ipcRenderer} from 'electron'
 import {ServerInfo} from "./type";
 
+const isSupport = async (serverInfo: ServerInfo) => {
+    return ipcRenderer.invoke('server:isSupport', serverInfo)
+}
+
 const start = async (serverInfo: ServerInfo) => {
     return ipcRenderer.invoke('server:start', serverInfo)
 }
@@ -33,6 +37,7 @@ const callFunctionWithException = async (serverInfo: ServerInfo, method: string,
 }
 
 export default {
+    isSupport,
     start,
     ping,
     stop,
