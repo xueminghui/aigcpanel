@@ -44,14 +44,14 @@ defineExpose({
             <div class="border rounded-lg p-3">
                 <div class="flex mb-4">
                     <div class="w-20">{{ $t('模型') }}</div>
-                    <div class="flex items-center">
-                        <div class="mr-2">{{ props.record.title }}</div>
-                        <div v-if="record.type===EnumServerType.LOCAL_DIR"
-                             class="mr-2 text-sm bg-gray-100 px-2 leading-6 inline-block rounded-lg">
-                            {{ props.record.name }}
-                        </div>
-                        <div class="mr-2 text-sm bg-gray-100 px-2 leading-6 inline-block rounded-lg">
+                    <div class="flex flex-wrap items-center">
+                        <div class="mr-2  mb-1">{{ props.record.title }}</div>
+                        <div class="mr-2 text-sm bg-gray-100 px-2 leading-6 inline-block rounded-lg mb-1">
                             v{{ props.record.version }}
+                        </div>
+                        <div v-if="record.type===EnumServerType.LOCAL_DIR"
+                             class="mr-2 text-xs bg-gray-100 px-2 leading-6 inline-block rounded-lg mb-1">
+                            {{ props.record.name }}
                         </div>
                     </div>
                 </div>

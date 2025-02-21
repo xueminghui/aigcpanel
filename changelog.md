@@ -1,6 +1,8 @@
 ## v0.5.0
 
 - 新增：模型添加是否支持检测，过滤不支持的模型
+- 新增：模型 CosyVoice-0.5b 模型
+- 新增：模型 CosyVoice-300m-instruct 模型
 
 ## v0.4.0 加速标识支持，提高模型启动成功率，MuseTalk和CosyVoice模型全新优化
 

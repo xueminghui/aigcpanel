@@ -16,7 +16,6 @@ export function functionToLabel(f: string) {
 export function buildServerContent(config: any) {
     const contentLines: string[] = []
     if (config?.content) {
-        contentLines.push('<h2>' + t('模型') + '</h2>')
         contentLines.push(config.content as string)
     }
     if (config.functions) {
