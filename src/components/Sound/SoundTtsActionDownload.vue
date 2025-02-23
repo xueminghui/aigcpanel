@@ -3,6 +3,7 @@ import {Dialog} from "../../lib/dialog";
 import {t} from "../../lang";
 import {SoundTtsRecord} from "../../service/SoundTtsService";
 import {mapError} from "../../lib/error";
+import {contentToFilenamePathPart} from "../../lib/aigcpanel";
 
 const props = defineProps<{
     record: SoundTtsRecord,
@@ -10,7 +11,7 @@ const props = defineProps<{
 
 const doDownload = async () => {
     const record = props.record
-    const title = `${t('声音合成')}_${record.id}_${record.text.substring(0, 10)}.wav`
+    const title = `${t('声音合成')}_${record.id}_${contentToFilenamePathPart(record.text)}.wav`
     let filePath = await window.$mapi.file.openSave({
         defaultPath: title
     })

@@ -28,3 +28,11 @@ export function buildServerContent(config: any) {
     }
     return contentLines.join('\n')
 }
+
+export function contentToFilenamePathPart(text: string, limit: number = 10) {
+    return text
+        // 只保留字母、文字信息
+        .replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '')
+        .substring(0, limit)
+
+}
