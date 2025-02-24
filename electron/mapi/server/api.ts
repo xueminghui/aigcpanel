@@ -252,11 +252,19 @@ const launcherSubmitAndQuery = async (context: ServerContext, data: ServerFuncti
                 }
             }
         }
-        if (queryRet.data.status === 'success') {
+        if (queryRet.data.status === 'running') {
+            continue
+        } else if (queryRet.data.status === 'success') {
             launcherResult.endTime = Date.now()
             await Files.appendText(context.ServerInfo.logFile, 'success')
-            break
+        } else {
+            let msg = '请在模型日志中查看错误日志'
+            if (launcherResult.result && launcherResult.result.msg) {
+                msg = launcherResult.result.msg
+            }
+            throw `运行错误：${msg}`
         }
+        break
     }
     return launcherResult
 }
@@ -265,6 +273,19 @@ const launcherPrepareConfigJson = async (data: any) => {
     const configJson = await Files.temp('json')
     await Files.write(configJson, JSON.stringify(data), {isFullPath: true})
     return configJson
+}
+
+const launcherSubmitConfigJsonAndQuery = async (context: ServerContext, configData: any) => {
+    const configJsonPath = await launcherPrepareConfigJson(configData)
+    const result = await launcherSubmitAndQuery(context, {
+        id: configData.id,
+        entryPlaceholders: {
+            'CONFIG': configJsonPath
+        },
+        root: context.ServerInfo.localPath,
+    })
+    await Files.deletes(configJsonPath, {isFullPath: true})
+    return result
 }
 
 export default {
@@ -287,4 +308,5 @@ export default {
     base64Decode: EncodeUtil.base64Decode,
     launcherSubmitAndQuery,
     launcherPrepareConfigJson,
+    launcherSubmitConfigJsonAndQuery
 }

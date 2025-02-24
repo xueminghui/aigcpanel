@@ -14,7 +14,6 @@ export type SoundTtsRecord = {
 
     status?: 'queue' | 'wait' | 'running' | 'success' | 'fail';
     statusMsg?: string;
-    jobId?: string;
     jobResult?: any;
     startTime?: number,
     endTime?: number | undefined,

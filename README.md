@@ -138,12 +138,8 @@ module.exports = {
         } else if (!serverRuntime.port || !await this.ServerApi.app.isPortAvailable(serverRuntime.port)) {
             serverRuntime.port = await this.ServerApi.app.availablePort(50617)
         }
-        if (serverInfo.setting?.['startCommand']) {
-            command.push(serverInfo.setting.startCommand)
-        } else {
-            // 这里是模型启动命令
-            //command.push(`"${serverInfo.localPath}/server/main"`)
-        }
+        command.push(`"${serverInfo.localPath}/launcher"`)
+        command.push(`--env=LAUNCHER_PORT=${serverRuntime.port}`)
         shellController = await this.ServerApi.app.spawnShell(command, {
             cwd: serverInfo.localPath,
             env: {

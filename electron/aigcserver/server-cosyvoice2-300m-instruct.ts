@@ -185,7 +185,6 @@ export const ServerCosyvoice2300mInstruct: ServerContext = {
             type: 'success',
             start: 0,
             end: 0,
-            jobId: '',
             data: {
                 filePath: null
             }
@@ -203,7 +202,7 @@ export const ServerCosyvoice2300mInstruct: ServerContext = {
         resultData.start = Date.now()
         try {
             this.send('taskRunning', {id: data.id})
-            const configJson = await this.ServerApi.launcherPrepareConfigJson({
+            const result = await this.ServerApi.launcherSubmitConfigJsonAndQuery(this, {
                 id: data.id,
                 mode: 'local',
                 modelConfig: {
@@ -215,13 +214,6 @@ export const ServerCosyvoice2300mInstruct: ServerContext = {
                     promptText: data.promptText,
                     crossLingual: !!param['CrossLingual'],
                 }
-            })
-            const result = await this.ServerApi.launcherSubmitAndQuery(this, {
-                id: data.id,
-                entryPlaceholders: {
-                    'CONFIG': configJson
-                },
-                root: this.ServerInfo.localPath,
             })
             resultData.end = result.endTime
             resultData.data.filePath = result.result.url
@@ -244,7 +236,6 @@ export const ServerCosyvoice2300mInstruct: ServerContext = {
             type: 'success',
             start: 0,
             end: 0,
-            jobId: '',
             data: {
                 filePath: null
             }

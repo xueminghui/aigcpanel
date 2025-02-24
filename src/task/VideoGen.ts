@@ -67,14 +67,10 @@ export const VideoGen: TaskBiz = {
             case 'success':
                 await VideoGenService.update(bizId as any, {
                     status: 'success',
-                    jobId: '',
                     jobResult: res,
                 })
                 return 'success'
             case 'querying':
-                await VideoGenService.update(bizId as any, {
-                    jobId: res.data.jobId,
-                })
                 return 'querying'
             case 'retry':
                 return 'retry'
@@ -97,7 +93,6 @@ export const VideoGen: TaskBiz = {
             case 'success':
                 await VideoGenService.update(bizId as any, {
                     status: 'success',
-                    jobId: '',
                     jobResult: res,
                 })
                 return 'success'

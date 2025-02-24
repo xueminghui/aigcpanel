@@ -203,14 +203,14 @@ export const serverStore = defineStore("server", {
                         if (success) {
                             serverRuntime.status = EnumServerStatus.RUNNING
                         } else {
-                            serverRuntime.pingCheckTimer = setTimeout(pingCheck, 5000)
+                            serverRuntime.pingCheckTimer = setTimeout(pingCheck, 2000)
                         }
                     })
                     .catch(err => {
-                        serverRuntime.pingCheckTimer = setTimeout(pingCheck, 5000)
+                        serverRuntime.pingCheckTimer = setTimeout(pingCheck, 2000)
                     })
             }
-            serverRuntime.pingCheckTimer = setTimeout(pingCheck, 3 * 1000)
+            serverRuntime.pingCheckTimer = setTimeout(pingCheck, 2 * 1000)
         },
         async stop(server: ServerRecord) {
             const record = this.findRecord(server)

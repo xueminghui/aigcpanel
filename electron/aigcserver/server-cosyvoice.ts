@@ -203,7 +203,6 @@ export const ServerCosyvoice: ServerContext = {
             type: 'success',
             start: 0,
             end: 0,
-            jobId: '',
             data: {
                 filePath: null
             }
@@ -221,7 +220,7 @@ export const ServerCosyvoice: ServerContext = {
         try {
             this.send('taskRunning', {id: data.id})
             if (VersionUtil.ge(this.ServerInfo.version, '0.2.0')) {
-                const configJson = await this.ServerApi.launcherPrepareConfigJson({
+                const result = await this.ServerApi.launcherSubmitConfigJsonAndQuery(this, {
                     id: data.id,
                     mode: 'local',
                     modelConfig: {
@@ -231,13 +230,6 @@ export const ServerCosyvoice: ServerContext = {
                         text: data.text,
                         speakerId: data.param.speaker,
                     }
-                })
-                const result = await this.ServerApi.launcherSubmitAndQuery(this, {
-                    id: data.id,
-                    entryPlaceholders: {
-                        'CONFIG': configJson
-                    },
-                    root: this.ServerInfo.localPath,
                 })
                 resultData.end = result.endTime
                 resultData.data.filePath = result.result.url
@@ -277,7 +269,6 @@ export const ServerCosyvoice: ServerContext = {
             type: 'success',
             start: 0,
             end: 0,
-            jobId: '',
             data: {
                 filePath: null
             }

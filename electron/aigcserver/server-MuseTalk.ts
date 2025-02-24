@@ -128,7 +128,6 @@ export const ServerMuseTalk: ServerContext = {
             type: 'success',
             start: 0,
             end: 0,
-            jobId: '',
             data: {
                 filePath: null
             }
@@ -146,7 +145,7 @@ export const ServerMuseTalk: ServerContext = {
         try {
             this.send('taskRunning', {id: data.id})
             if (VersionUtil.ge(this.ServerInfo.version, '0.3.0')) {
-                const configJson = await this.ServerApi.launcherPrepareConfigJson({
+                const result = await this.ServerApi.launcherSubmitConfigJsonAndQuery(this, {
                     id: data.id,
                     mode: 'local',
                     modelConfig: {
@@ -154,13 +153,6 @@ export const ServerMuseTalk: ServerContext = {
                         audio: data.soundFile,
                         box: data.param.box
                     }
-                })
-                const result = await this.ServerApi.launcherSubmitAndQuery(this, {
-                    id: data.id,
-                    entryPlaceholders: {
-                        'CONFIG': configJson
-                    },
-                    root: this.ServerInfo.localPath,
                 })
                 resultData.end = result.endTime
                 resultData.data.filePath = result.result.url

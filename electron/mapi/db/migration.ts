@@ -22,7 +22,6 @@ const versions = [
 
                     status TEXT,
                     statusMsg TEXT,
-                    jobId TEXT,
                     jobResult TEXT,
                     startTime INTEGER,
                     endTime INTEGER,
@@ -42,7 +41,6 @@ const versions = [
 
                     status TEXT,
                     statusMsg TEXT,
-                    jobId TEXT,
                     jobResult TEXT,
                     startTime INTEGER,
                     endTime INTEGER,
@@ -72,7 +70,6 @@ const versions = [
 
                     status TEXT,
                     statusMsg TEXT,
-                    jobId TEXT,
                     jobResult TEXT,
                     startTime INTEGER,
                     endTime INTEGER,

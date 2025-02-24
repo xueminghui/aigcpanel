@@ -3,7 +3,7 @@ import {ipcMain} from "electron";
 import {Log} from "../log/main";
 import {mapError} from "./error";
 import {AigcServer} from "../../aigcserver";
-import {ServerContext, ServerInfo} from "./type";
+import {SendType, ServerContext, ServerInfo} from "./type";
 import {Files} from "../file/main";
 
 const serverModule: {
@@ -43,10 +43,19 @@ const getModule = async (serverInfo: ServerInfo, option?: {
                     throw `ServerFileNotFound : ${serverPath}`
                 }
                 const module = await import(`file://${serverPath}`)
-                module.default.type = 'custom'
-                module.default.ServerApi = ServerApi
-                await module.default.init()
-                serverModule[serverInfo.localPath] = module.default
+                const server = module.default
+                server.type = 'custom'
+                server.ServerApi = ServerApi
+                if (server.init) {
+                    await server.init()
+                }
+                server.send = (type: SendType, data: any) => {
+                    server.ServerApi.event.sendChannel(server.ServerInfo.eventChannelName, {type, data})
+                }
+                server.sendLog = (data: any) => {
+                    server.ServerApi.file.appendText(server.ServerInfo.logFile, data)
+                }
+                serverModule[serverInfo.localPath] = server
             }
         } catch (e) {
             if (!option.throwException) {

@@ -10,7 +10,7 @@ const props = defineProps<{
 
 const doDownload = async () => {
     const record = props.record
-    const title = `${t('视频生成')}_${record.id}.mp4`
+    const title = `${t('视频合成')}_${record.id}.mp4`
     let filePath = await window.$mapi.file.openSave({
         defaultPath: title
     })
