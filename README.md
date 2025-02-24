@@ -16,10 +16,12 @@
 - 支持多模型导入、一键启动、模型设置、模型日志查看
 - 支持国际化，支持简体中文、英语
 - 支持多种模型一键启动包
-  - `MuseTalk`
-  - `CosyVoice-300M`
-  - `CosyVoice-300M-Instruct`
-  - `CosyVoice2-0.5b`
+  - 声音模型 `CosyVoice-300M`
+  - 声音模型 `CosyVoice-300M-Instruct`
+  - 声音模型 `CosyVoice2-0.5b`
+  - 视频模型 `MuseTalk`
+  - 视频模型 `LatentSync`
+  - 视频模型 `Wav2Lip`
 
 ## 效果预览
 
@@ -114,123 +116,110 @@ const serverRuntime = {
 }
 
 let shellController = null
+let isRunning = false
 
 module.exports = {
     ServerApi: null,
-    // 模型启动后的路径
-    _url() {
+    ServerInfo: null,
+    url() {
         return `http://localhost:${serverRuntime.port}/`
     },
-    _send(serverInfo, type, data) {
-        this.ServerApi.event.sendChannel(serverInfo.eventChannelName, {type, data})
-    },
-    // 模型初始化
-    async init(ServerApi) {
-        this.ServerApi = ServerApi;
-    },
-    // 模型启动
-    async start(serverInfo) {
-        console.log('start', JSON.stringify(serverInfo))
-        this._send(serverInfo, 'starting', serverInfo)
+    async start() {
+        this.send('starting', this.ServerInfo)
         let command = []
-        if (serverInfo.setting?.['port']) {
-            serverRuntime.port = serverInfo.setting.port
+        if (this.ServerInfo.setting && this.ServerInfo.setting.port) {
+            serverRuntime.port = this.ServerInfo.setting.port
         } else if (!serverRuntime.port || !await this.ServerApi.app.isPortAvailable(serverRuntime.port)) {
             serverRuntime.port = await this.ServerApi.app.availablePort(50617)
         }
-        command.push(`"${serverInfo.localPath}/launcher"`)
-        command.push(`--env=LAUNCHER_PORT=${serverRuntime.port}`)
+        // 模型启动命令
+        command.push(`"${this.ServerInfo.localPath}/main"`)
         shellController = await this.ServerApi.app.spawnShell(command, {
-            cwd: serverInfo.localPath,
-            env: {
-                AA:11,
-                BB:22
-            },
             stdout: (data) => {
-                this.ServerApi.file.appendText(serverInfo.logFile, data)
+                this.sendLog(data)
             },
             stderr: (data) => {
-                this.ServerApi.file.appendText(serverInfo.logFile, data)
+                this.sendLog(data)
             },
             success: (data) => {
-                this._send(serverInfo, 'success', serverInfo)
+                this.send('success', this.ServerInfo)
             },
             error: (data, code) => {
-                this.ServerApi.file.appendText(serverInfo.logFile, data)
-                this._send(serverInfo, 'error', serverInfo)
+                this.sendLog(data)
+                this.send('error', this.ServerInfo)
             },
+            env: await this.ServerApi.env(),
+            cwd: this.ServerInfo.localPath,
         })
     },
-    // 模型启动检测
-    async ping(serverInfo) {
+    async ping() {
         try {
-            // const res = await this.ServerApi.request(`${this._url()}info`)
+            const res = await this.ServerApi.request(`${this.url()}ping`)
             return true
         } catch (e) {
         }
         return false
     },
-    // 模型停止
-    async stop(serverInfo) {
-        this._send(serverInfo, 'stopping', serverInfo)
+    async stop() {
+        this.send('stopping', this.ServerInfo)
         try {
             shellController.stop()
             shellController = null
         } catch (e) {
             console.log('stop error', e)
         }
-        this._send(serverInfo, 'stopped', serverInfo)
+        this.send('stopped', this.ServerInfo)
     },
-    // 模型配置
     async config() {
         return {
-            "code": 0,
-            "msg": "ok",
-            "data": {
-                "httpUrl": shellController ? this._url() : null,
-                "functions": {
-                    "videoGen": {
-                        "param": [
-                            {
-                                name: "box",
-                                type: "inputNumber",
-                                title: "嘴巴张开度",
-                                defaultValue: -7,
-                                placeholder: "",
-                                tips: '嘴巴张开度可以控制生成视频中嘴巴的张开程度',
-                                min: -9,
-                                max: 9,
-                                step: 1,
-                            }
-                        ]
-                    },
+            code: 0,
+            msg: "ok",
+            data: {
+                httpUrl: shellController ? this.url() : null,
+                content: ``,
+                functions: {
+                    videoGen: {
+                        param: []
+                    }
                 }
             }
         }
     },
-    // 视频生成
-    async videoGen(serverInfo, data) {
-        console.log('videoGen', serverInfo, data)
+    async videoGen(data) {
         const resultData = {
             // success, querying, retry
             type: 'success',
             start: 0,
             end: 0,
-            jobId: '',
             data: {
                 filePath: null
             }
         }
+        if (isRunning) {
+            resultData.type = 'retry'
+            return {
+                code: 0,
+                msg: 'ok',
+                data: resultData
+            }
+        }
+        isRunning = true
+        const param = data.param || {}
         resultData.start = Date.now()
-        // 发送生成命令
-        // ...
-        // console.log('videoGen.result', JSON.stringify(result))
-        resultData.end = Date.now()
-        resultData.data.filePath = result.data[0].value.video.path
-        return {
-            code: 0,
-            msg: 'ok',
-            data: resultData
+        try {
+            this.send('taskRunning', {id: data.id})
+            // 模型调用请求
+            resultData.end = result.endTime
+            resultData.data.filePath = result.result.url
+            return {
+                code: 0,
+                msg: 'ok',
+                data: resultData
+            }
+        } catch (e) {
+            throw e
+        } finally {
+            isRunning = false
         }
     },
 }
